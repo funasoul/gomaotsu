@@ -14,6 +14,21 @@ I have tested this application with Java 8 (1.8.0_40) on MacOSX.
 cd ~/git/
 git clone https://github.com/funasoul/gomaotsu.git
 ```
+
+#### Build from command line
+```sh
+sudo port install maven32        # if your machine doesn't have Maven
+sudo port select maven maven32   # if your machine doesn't have Maven
+export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
+mvn clean package
+```
+
+#### Launch from command line
+```sh
+java -jar target/Gomaotsu-{$version}-SNAPSHOT-jar-with-dependencies.jar
+```
+
+Or, you can import this project in Eclipse as follows:
 #### Launch Eclipse and import as Maven project.
 1. [File] -> [Import] -> [Maven] -> [Existing Maven Project] -> [Next]
 2. Navigate to ```~/git/gomaotsu``` -> [Next]
