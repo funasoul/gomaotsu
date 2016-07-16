@@ -112,6 +112,9 @@ public class Gomaotsu {
       } catch (IOException e) {
         e.printStackTrace();
       }
+    } else {
+      // If OtomeList.csv does not exist, then save current set as OtomeList.csv.
+      exportOtomeList();
     }
   }
 
@@ -158,11 +161,24 @@ public class Gomaotsu {
     }
   }
 
-  public void exportOtomeSet() {
+  public void exportOtomeList() {
     ArrayList<String> otomeStringList = new ArrayList<String>();
-    ArrayList<String> friendStringList = new ArrayList<String>();
     for (Otome o : otomeSet) {
       otomeStringList.add(o.toString());
+    }
+    FileSystem fs = FileSystems.getDefault();
+    Path otomeFile = fs.getPath(Constants.otomeFileName);
+    createBackup(otomeFile);
+    try {
+      Files.write(otomeFile, otomeStringList, StandardOpenOption.CREATE);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public void exportFriendList() {
+    ArrayList<String> friendStringList = new ArrayList<String>();
+    for (Otome o : otomeSet) {
       String s = o.getSid();
       for (Otome f : o.getFriendSet()) {
         s += "," + f.getName();
@@ -170,16 +186,18 @@ public class Gomaotsu {
       friendStringList.add(s);
     }
     FileSystem fs = FileSystems.getDefault();
-    Path otomeFile = fs.getPath(Constants.otomeFileName);
     Path friendFile = fs.getPath(Constants.friendFileName);
-    createBackup(otomeFile);
     createBackup(friendFile);
     try {
-      Files.write(otomeFile, otomeStringList, StandardOpenOption.CREATE);
       Files.write(friendFile, friendStringList, StandardOpenOption.CREATE);
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  public void exportCSVFiles() {
+    exportOtomeList();
+    exportFriendList();
   }
 
   /**
@@ -280,9 +298,8 @@ public class Gomaotsu {
     g.drawGraph();
     g.writeGraphML();
     // g.exportEdgeCSV();
-    // g.exportOtomeSet();
     if (fromWeb) {
-      g.exportOtomeSet();
+      g.exportCSVFiles();
     }
   }
 
