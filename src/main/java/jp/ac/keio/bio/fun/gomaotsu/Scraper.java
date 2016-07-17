@@ -133,6 +133,7 @@ public class Scraper {
         }
       }
     } catch (IOException e) {
+      System.err.println("Connection error on: " + otm.getName());
       e.printStackTrace();
     }
     return al;

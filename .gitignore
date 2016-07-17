@@ -30,7 +30,9 @@ hs_err_pid*
 /target/
 /bin/
 
-# specific files under bak directory
+# specific files under current and bak directory
 /bak/
 /Otome.graphml 
 /OtomeList.csv 
+/FriendList-bak.csv
+/OtomeList-bak.csv
