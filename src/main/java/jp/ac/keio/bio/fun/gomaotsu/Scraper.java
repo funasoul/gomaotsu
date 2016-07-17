@@ -118,7 +118,7 @@ public class Scraper {
     String otomeUrl = otm.getUrl();
     //System.out.println(otomeUrl);
     try {
-      Document document = Jsoup.connect(otomeUrl).get();
+      Document document = Jsoup.connect(otomeUrl).timeout(0).get();
       Elements tables = document.getElementsByTag("table");
       for (Element table : tables) {
         Elements rows = table.select("tr");

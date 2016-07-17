@@ -100,6 +100,7 @@ public class Gomaotsu {
         List<String> list = Files.readAllLines(otomeFile);
         for (String line : list) {
           String[] sa = line.split(",");
+          if (sa[0].startsWith("#")) continue; // skip header
           Integer id = Integer.parseInt(sa[0]);
           Otome o = getOtomeById(id);
           boolean own = isOne(sa[12]);
@@ -161,8 +162,13 @@ public class Gomaotsu {
     }
   }
 
+  public String generateHeader() {
+    return "#No.,★,属性,使い魔,コスト,魔力,HP,分類,ショット種類,スキル種類,スキル名,スキル効果,所持,愛情max";
+  }
+
   public void exportOtomeList() {
     ArrayList<String> otomeStringList = new ArrayList<String>();
+    otomeStringList.add(generateHeader());
     for (Otome o : otomeSet) {
       otomeStringList.add(o.toString());
     }
