@@ -163,7 +163,7 @@ public class Gomaotsu {
   }
 
   public String generateHeader() {
-    return "#No.,★,属性,使い魔,コスト,魔力,HP,分類,ショット種類,スキル種類,スキル名,スキル効果,所持,愛情max";
+    return "#No.,★,属性,使い魔,コスト,魔力,HP,分類,ショット種類,スキル種類,スキル名,スキル効果,所持,親密度max";
   }
 
   public void exportOtomeList() {
