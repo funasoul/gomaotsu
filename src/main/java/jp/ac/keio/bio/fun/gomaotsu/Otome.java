@@ -91,7 +91,15 @@ public class Otome implements Serializable, Comparable<Otome> {
         booleanToString(isOwn()) + "," + booleanToString(isLoveMax());
     return s;
   }
-
+  
+  public boolean is5Otome() {
+    if (name.equals("ラナン") || name.equals("カトレア") || name.equals("スフレ") ||
+        name.equals("プルメリア") || name.equals("ロザリー") ) {
+      return true;
+    }
+    return false;
+  }
+  
   /**
    * @return the id (No.)
    */

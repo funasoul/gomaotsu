@@ -29,8 +29,10 @@ public class Gomaotsu {
   private TreeSet<Otome> otomeSet;
   private Scraper sc;
   private Graph graph;
+  private boolean add5OtometoGraph;
 
   public Gomaotsu() {
+    add5OtometoGraph = false;
     sc = new Scraper();
     otomeSet = sc.createOtomeSet();
     initGraph();
@@ -207,6 +209,20 @@ public class Gomaotsu {
   }
 
   /**
+   * @return the add5OtometoGraph
+   */
+  public boolean isAdd5OtometoGraph() {
+    return add5OtometoGraph;
+  }
+
+  /**
+   * @param add5OtometoGraph the add5OtometoGraph to set
+   */
+  public void setAdd5OtometoGraph(boolean add5OtometoGraph) {
+    this.add5OtometoGraph = add5OtometoGraph;
+  }
+
+  /**
    * @return the otomeSet
    */
   public TreeSet<Otome> getOtomeSet() {
@@ -257,10 +273,18 @@ public class Gomaotsu {
     n.addAttribute("ui.label", o.getHoshi() + ":" + o.getName());
     n.addAttribute("ui.class", o.getZokuseiAscii(), o.getBunruiAscii(), o.getMaxAscii());
   }
+  
+  public boolean isActiveEdge(Otome src, Otome dst) {
+    if (src.isOwn() && dst.isOwn() && !src.isLoveMax()) {
+      if (!dst.isLoveMax() || (isAdd5OtometoGraph() && dst.is5Otome())) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   public void addEdgeToGraph(Otome src, Otome dst) {
-    if (src.isOwn() && dst.isOwn() && !src.isLoveMax() && !dst.isLoveMax()) {
-    //if (src.isOwn() && dst.isOwn() && !src.isLoveMax()) {
+    if (isActiveEdge(src, dst)) {
       addOtomeToGraph(src);
       addOtomeToGraph(dst);
       Edge e = graph.addEdge(src.getName() + ":" + dst.getName(), src.getName(), dst.getName(), true);
@@ -269,7 +293,7 @@ public class Gomaotsu {
   }
 
   public void addEdgeToList(Otome src, Otome dst, ArrayList<String> al) {
-    if (src.isOwn() && dst.isOwn() && src.isLoveMax() == false && dst.isLoveMax() == false) {
+    if (isActiveEdge(src, dst)) {
       String s = src.getName() + "," + dst.getName();
       al.add(s);
     }
@@ -299,6 +323,7 @@ public class Gomaotsu {
       fromWeb = true;
     }
     Gomaotsu g = new Gomaotsu();
+    g.setAdd5OtometoGraph(true); // 5乙女は必ずグラフに描画するか
     g.addOtomeInfoFromFile();
     g.addFriendInfo(fromWeb);
     g.drawGraph();
