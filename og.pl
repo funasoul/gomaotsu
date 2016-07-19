@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# Last modified: Mon, 18 Jul 2016 06:02:54 +0900
+# Last modified: Wed, 20 Jul 2016 04:30:48 +0900
 #
 # Requirement: This script requires Unicode::GCString to be installed
 # on your system..
@@ -135,6 +135,7 @@ sub print_line {
   print_shot($id);
   print_name($id);
   print_skill($id);
+  print_love($id);
   print "\n";
 }
 
@@ -193,6 +194,15 @@ sub print_shot {
 sub print_skill {
   my $id = shift;
   print_string($otomes{$id}->{skill}, 20);
+}
+
+sub print_love {
+  my $id = shift;
+  if ($otomes{$id}->{love} == 1) {
+    print_color("満", $red);
+  } else {
+    print_color("未", $cyan);
+  }
 }
 
 sub print_name {
