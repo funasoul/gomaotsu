@@ -89,14 +89,6 @@ public class Scraper {
           }
         }
       }
-      // update graph (nodes and edges)
-      /*
-      for (Otome friend : o.getFriendSet()) {
-        n = graph.addNode(friend.getName());
-        n.addAttribute("ui.label", friend.getName());
-        graph.addEdge(o.getName()+":"+friend.getName(), o.getName(), friend.getName(), true);
-      }
-      */
     }
     System.out.println(" Done.");
     return otomeList;

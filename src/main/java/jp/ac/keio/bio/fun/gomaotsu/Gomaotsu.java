@@ -30,6 +30,7 @@ public class Gomaotsu {
   private Scraper sc;
   private Graph graph;
   private boolean add5OtometoGraph;
+  private boolean forGuild;
 
   public Gomaotsu() {
     add5OtometoGraph = false;
@@ -223,6 +224,22 @@ public class Gomaotsu {
   }
 
   /**
+   * ギルドバトル用の編成か
+   * @return the forGuild
+   */
+  public boolean isForGuild() {
+    return forGuild;
+  }
+
+  /**
+   * ギルドバトル用の編成か
+   * @param forGuild the forGuild to set
+   */
+  public void setForGuild(boolean forGuild) {
+    this.forGuild = forGuild;
+  }
+
+  /**
    * @return the otomeSet
    */
   public TreeSet<Otome> getOtomeSet() {
@@ -274,9 +291,17 @@ public class Gomaotsu {
     n.addAttribute("ui.class", o.getZokuseiAscii(), o.getBunruiAscii(), o.getMaxAscii());
   }
   
+  /**
+   * ネットワークに追加すべきエッジか
+   * @param src サポート
+   * @param dst メイン
+   * @return
+   */
   public boolean isActiveEdge(Otome src, Otome dst) {
-    if (src.isOwn() && dst.isOwn() && !src.isLoveMax()) {
-      if (!dst.isLoveMax() || (isAdd5OtometoGraph() && dst.is5Otome())) {
+    if (src.isOwn() && dst.isOwn() && !src.isLoveMax()) {   // サポートがLoveMaxでないことが前提
+      if (forGuild && src.isZentaiSkill() && dst.isRecommendedForGuild()) { // ギルドバトル用
+        return true;
+      } else if (!dst.isLoveMax() || (isAdd5OtometoGraph() && dst.is5Otome())) { // 通常用
         return true;
       }
     }
@@ -324,6 +349,7 @@ public class Gomaotsu {
     }
     Gomaotsu g = new Gomaotsu();
     g.setAdd5OtometoGraph(true); // 5乙女は必ずグラフに描画するか
+    //g.setForGuild(true); // ギルドバトル用編成か
     g.addOtomeInfoFromFile();
     g.addFriendInfo(fromWeb);
     g.drawGraph();

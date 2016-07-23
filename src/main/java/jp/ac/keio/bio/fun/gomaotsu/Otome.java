@@ -101,6 +101,30 @@ public class Otome implements Serializable, Comparable<Otome> {
   }
   
   /**
+   * 全体攻撃スキルか
+   * @return
+   */
+  public boolean isZentaiSkill() {
+    if (getSkill().startsWith("全体攻撃")) {
+      return true;
+    }
+    return false;
+  }
+  
+  /**
+   * ギルドバトルに向いているか
+   * @return
+   */
+  public boolean isRecommendedForGuild() {
+    String shot = getShot();
+    if (shot.equals("ホーミング改") || shot.equals("ロックビーム") || 
+        shot.equals("ガトリング") || shot.equals("メガレーザー") || shot.equals("ツインショット")) {
+      return true;
+    }
+    return false;
+  }
+  
+  /**
    * @return the id (No.)
    */
   public int getId() {
@@ -161,6 +185,7 @@ public class Otome implements Serializable, Comparable<Otome> {
   }
 
   /**
+   * 乙女の名前を返す
    * @return the name (使い魔)
    */
   public String getName() {
@@ -221,6 +246,7 @@ public class Otome implements Serializable, Comparable<Otome> {
   }
 
   /**
+   * ショットの分類(集中 or 拡散)を返す
    * @return the bunrui (分類)
    */
   public String getBunrui() {
@@ -244,14 +270,15 @@ public class Otome implements Serializable, Comparable<Otome> {
   }
 
   /**
-   * @return the shot (ショット分類)
+   * ショット種類(ショット、Wショット、スプレッド、etc)を返す
+   * @return the shot (ショット種類)
    */
   public String getShot() {
     return shot;
   }
 
   /**
-   * @param shot (ショット分類)
+   * @param shot (ショット種類)
    *          the shot to set
    */
   public void setShot(String shot) {
@@ -259,6 +286,7 @@ public class Otome implements Serializable, Comparable<Otome> {
   }
 
   /**
+   * スキル種類(全体攻撃、特殊弾、設置、回復、etc)を返す
    * @return the skill (スキル種類)
    */
   public String getSkill() {
