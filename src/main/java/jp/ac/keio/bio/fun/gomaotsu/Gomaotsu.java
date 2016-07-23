@@ -16,6 +16,10 @@ import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.stream.file.FileSinkGraphML;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 /**
  * 
@@ -29,16 +33,29 @@ public class Gomaotsu {
   private TreeSet<Otome> otomeSet;
   private Scraper sc;
   private Graph graph;
-  private boolean add5OtometoGraph;
-  private boolean forGuild;
+
+  @Option(name="-h", aliases={"--help"}, usage="dispaly usage")
+  private boolean isHelp = false;
+  @Option(name="-u", aliases={"--update"}, usage="download and update friendlist from web")
+  private boolean updateFromWeb = false;
+  @Option(name="-g", aliases={"--guild"}, usage="generate graph for guild battle")
+  private boolean forGuild = false;
+  @Option(name="-a", aliases={"--add"}, usage="always add 5 otome to graph") // 5乙女は必ずグラフに描画するか
+  private boolean add5OtometoGraph = false;
+  
+  //receives other command line parameters than options
+  @Argument
+  private List<String> arguments = new ArrayList<String>();
 
   public Gomaotsu() {
-    add5OtometoGraph = false;
     sc = new Scraper();
+  }
+
+  public void init() {
     otomeSet = sc.createOtomeSet();
     initGraph();
   }
-
+  
   public void initGraph() {
     this.graph = new SingleGraph("OtmGraph");
     System.setProperty("org.graphstream.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
@@ -341,22 +358,40 @@ public class Gomaotsu {
       e.printStackTrace();
     }
   }
+  
+  public void displayUsage(CmdLineParser parser) {
+    System.err.println("java -jar target/Gomaotsu-${version}-SNAPSHOT-jar-with-dependencies.jar [options...]");
+    parser.printUsage(System.err);
+  }
 
   public static void main(String[] args) {
-    boolean fromWeb = false; // download friendlist from Web
-    if (args.length > 0 && args[0].equals("-u")) {
-      fromWeb = true;
+    new Gomaotsu().doMain(args);
+  }
+
+  public void doMain(String[] args) {
+    CmdLineParser parser = new CmdLineParser(this);
+    try {
+      // parse the arguments.
+      parser.parseArgument(args);
+    } catch (CmdLineException e) {
+      System.err.println(e.getMessage());
+      displayUsage(parser);
+      return;
     }
-    Gomaotsu g = new Gomaotsu();
-    g.setAdd5OtometoGraph(true); // 5乙女は必ずグラフに描画するか
-    //g.setForGuild(true); // ギルドバトル用編成か
-    g.addOtomeInfoFromFile();
-    g.addFriendInfo(fromWeb);
-    g.drawGraph();
-    g.writeGraphML();
-    // g.exportEdgeCSV();
-    if (fromWeb) {
-      g.exportCSVFiles();
+    if (isHelp) {
+      displayUsage(parser);
+      return;
+    }
+    
+    // here we go.
+    init();
+    addOtomeInfoFromFile();
+    addFriendInfo(updateFromWeb);
+    drawGraph();
+    writeGraphML();
+    // exportEdgeCSV();
+    if (updateFromWeb) {
+      exportCSVFiles();
     }
   }
 
