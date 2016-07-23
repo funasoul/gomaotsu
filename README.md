@@ -25,7 +25,11 @@ mvn clean package
 
 #### Launch from command line
 ```sh
-java -jar target/Gomaotsu-{$version}-SNAPSHOT-jar-with-dependencies.jar
+java -jar target/Gomaotsu-${version}-SNAPSHOT-jar-with-dependencies.jar [options...]
+ -a (--add)    : always add 5 otome to graph (default: false)
+ -g (--guild)  : generate graph for guild battle (default: false)
+ -h (--help)   : dispaly usage (default: false)
+ -u (--update) : download and update friendlist from web (default: false)
 ```
 
 Or, you can import this project in Eclipse as follows:
