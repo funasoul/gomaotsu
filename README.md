@@ -28,11 +28,11 @@ mvn clean package
 java -jar target/Gomaotsu-${version}-SNAPSHOT-jar-with-dependencies.jar [options...]
  -a (--add)    : always add 5 otome to graph (default: false)
  -g (--guild)  : generate graph for guild battle (default: false)
- -h (--help)   : dispaly usage (default: false)
+ -h (--help)   : display usage (default: false)
  -u (--update) : download and update friendlist from web (default: false)
 ```
 
-Or, you can import this project in Eclipse as follows:
+Or, you can import this project to Eclipse as follows:
 #### Launch Eclipse and import as Maven project.
 1. [File] -> [Import] -> [Maven] -> [Existing Maven Project] -> [Next]
 2. Navigate to ```~/git/gomaotsu``` -> [Next]

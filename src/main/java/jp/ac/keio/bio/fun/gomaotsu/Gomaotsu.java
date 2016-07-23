@@ -34,7 +34,7 @@ public class Gomaotsu {
   private Scraper sc;
   private Graph graph;
 
-  @Option(name="-h", aliases={"--help"}, usage="dispaly usage")
+  @Option(name="-h", aliases={"--help"}, usage="display usage")
   private boolean isHelp = false;
   @Option(name="-u", aliases={"--update"}, usage="download and update friendlist from web")
   private boolean updateFromWeb = false;
