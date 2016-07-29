@@ -42,7 +42,7 @@ public class Gomaotsu {
   private boolean forGuild = false;
   @Option(name="-a", aliases={"--add"}, usage="always add 5 otome to graph") // 5乙女は必ずグラフに描画するか
   private boolean add5OtometoGraph = false;
-  
+
   //receives other command line parameters than options
   @Argument
   private List<String> arguments = new ArrayList<String>();
@@ -55,7 +55,7 @@ public class Gomaotsu {
     otomeSet = sc.createOtomeSet();
     initGraph();
   }
-  
+
   public void initGraph() {
     this.graph = new SingleGraph("OtmGraph");
     System.setProperty("org.graphstream.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
@@ -307,7 +307,7 @@ public class Gomaotsu {
     n.addAttribute("ui.label", o.getHoshi() + ":" + o.getName());
     n.addAttribute("ui.class", o.getZokuseiAscii(), o.getBunruiAscii(), o.getMaxAscii());
   }
-  
+
   /**
    * ネットワークに追加すべきエッジか
    * @param src サポート
@@ -316,10 +316,16 @@ public class Gomaotsu {
    */
   public boolean isActiveEdge(Otome src, Otome dst) {
     if (src.isOwn() && dst.isOwn() && !src.isLoveMax()) {   // サポートがLoveMaxでないことが前提
-      if (forGuild && src.isZentaiSkill() && dst.isRecommendedForGuild()) { // ギルドバトル用
-        return true;
-      } else if (!dst.isLoveMax() || (isAdd5OtometoGraph() && dst.is5Otome())) { // 通常用
-        return true;
+      if (forGuild) { // ギルドバトル用
+        if (src.isZentaiSkill() && (dst.isRecommendedForGuild() || (isAdd5OtometoGraph() && dst.is5Otome()))) { // ギルドバトル用
+          return true;
+        } else {
+          return false;
+        }
+      } else { // 通常用
+        if (!dst.isLoveMax() || (isAdd5OtometoGraph() && dst.is5Otome())) {
+          return true;
+        }
       }
     }
     return false;
@@ -349,7 +355,7 @@ public class Gomaotsu {
       }
     }
   }
-  
+
   public void writeGraphML() {
     FileSinkGraphML fs = new FileSinkGraphML();
     try {
@@ -358,7 +364,7 @@ public class Gomaotsu {
       e.printStackTrace();
     }
   }
-  
+
   public void displayUsage(CmdLineParser parser) {
     System.err.println("java -jar target/Gomaotsu-${version}-SNAPSHOT-jar-with-dependencies.jar [options...]");
     parser.printUsage(System.err);
@@ -382,7 +388,7 @@ public class Gomaotsu {
       displayUsage(parser);
       return;
     }
-    
+
     // here we go.
     init();
     addOtomeInfoFromFile();
