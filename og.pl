@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# Last modified: Wed, 20 Jul 2016 04:30:48 +0900
+# Last modified: Sat, 30 Jul 2016 01:40:38 +0900
 #
 # Requirement: This script requires Unicode::GCString to be installed
 # on your system..
@@ -32,20 +32,27 @@ my $cyan    = "\x1b[1;36m";
 my $default = "\x1b[0m";
 
 my %otomes;
+(my $myname= $0) =~ s,.*[/\\],,;
+
+my $usage = <<_eou_;
+Otome Grep script.
+This script will grep through your OtomeList.csv and prints out the results.
+Usage:  $myname [-hm] [keyword1 keyword2 ...]
+            -h ... Show this message
+            -m ... Sort by MP
+    If no argument is set, it prints all Otome you have.
+    (ex.) $myname 闇 ニードル
+_eou_
+
 my $sortbyMP = 0;
+if ($ARGV[0] eq "-h") {
+  print $usage;
+  exit;
+}
 if ($ARGV[0] eq "-m" or $ARGV[0] eq "-M") {
   $sortbyMP = 1;
   shift @ARGV;
 }
-(my $myname= $0) =~ s,.*[/\\],,;
-my $usage = <<_eou_;
-Otome Grep script.
-This script will grep through your OtomeList.csv and prints out the results.
-Usage:  $myname [-m] [keyword1 keyword2 ...]
-           -m ... Sort by MP
-    If no argument is set, it prints all Otome you have.
-    (ex.) $myname 闇 ニードル
-_eou_
 
 open(IN, "<:utf8", $otomelist) or die "Cannot open file\n";
 
