@@ -42,6 +42,7 @@ public class Scraper {
       if (sid.equals("")) {
         continue;
       }
+      try {
       int id = Integer.parseInt(sid);
       int hoshi = Integer.parseInt(cols.get(1).text());
       String zokusei = cols.get(2).text();
@@ -60,6 +61,9 @@ public class Scraper {
       Otome otm = new Otome(id, hoshi, zokusei, name, cost, maryoku, hp, bunrui, shot, skill, skillName, skillKouka, false, false, url);
       System.out.println(otm);
       otomeSet.add(otm);
+      } catch (NumberFormatException ne) {
+        System.err.println("failed to parse Otome " + sid);
+      }
     }
     System.out.println("Read " + otomeSet.size() + " otomes.");
     return otomeSet;
