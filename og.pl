@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# Last modified: Sat, 30 Jul 2016 01:40:38 +0900
+# Last modified: Sun, 07 Aug 2016 17:18:09 +0900
 #
 # Requirement: This script requires Unicode::GCString to be installed
 # on your system..
@@ -57,6 +57,7 @@ if ($ARGV[0] eq "-m" or $ARGV[0] eq "-M") {
 open(IN, "<:utf8", $otomelist) or die "Cannot open file\n";
 
 while(<IN>){
+  chomp;
   my @array = (split(","));
   # CSV format:
   #  0,  1, 2  ,  3   ,  4   , 5  , 6, 7  ,     8      ,     9    ,   10   ,    11    , 12 ,  13
@@ -83,18 +84,39 @@ while(<IN>){
         if ($hoshi ne $arg) {
           $match = 0;
           last;
+        } else {
+          next;
         }
       }
+      $arg = "火" if $arg eq "炎";
+      $arg = "火" if $arg eq "赤";
+      $arg = "水" if $arg eq "青";
+      $arg = "風" if $arg eq "緑";
+      $arg = "光" if $arg eq "白";
+      $arg = "闇" if $arg eq "紫";
+      $arg = "闇" if $arg eq "黒";
       # if $arg is 火,水,風,光,闇 then match with zokusei only.
       if ($arg eq "火" or $arg eq "水" or $arg eq "風" or $arg eq "光" or $arg eq "闇") {
         if ($zokusei ne $arg) {
           $match = 0;
           last;
+        } else {
+          next;
+        }
+      }
+      # if $arg is 未,満 then match with love only.
+      if ($arg eq "未" or $arg eq "満") {
+        if (($arg eq "未" and $love != 0) or ($arg eq "満" and $love != 1)) {
+          $match = 0;
+          last;
+        } else {
+          next;
         }
       }
       # case insensitive match.
       if ($_ !~ /$arg/i) {
         $match = 0;
+        last;
       }
     }
     if ($match == 1) {
