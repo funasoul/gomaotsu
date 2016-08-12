@@ -70,6 +70,7 @@ public class Scraper {
   }
   
   public TreeSet<Otome> addFriendInfo(TreeSet<Otome> otomeList, boolean fromWeb) {
+    ArrayList<Otome> errList = new ArrayList<Otome>();
     int count = 0;
     int tick = (int)(otomeList.size()*0.05);
     System.out.print("Loading Otome... ");
@@ -81,6 +82,7 @@ public class Scraper {
       ArrayList<String> al;
       if (fromWeb) {
         al = this.getFriendListFromWeb(o);
+        if (al.size() == 0) errList.add(o);
       } else {
         al = this.getFriendListFromFile(o);
       }
@@ -95,6 +97,13 @@ public class Scraper {
       }
     }
     System.out.println(" Done.");
+    if (errList.size() > 0) {
+      System.out.println("Friend not found for following otomes.Please check" + 
+          System.getProperty("line.separator") + baseURL + " and fix its entry.");
+      for (Otome o : errList) {
+        System.out.println(o.getId() + ":" + o.getName());
+      }
+    }
     return otomeList;
   }
 
