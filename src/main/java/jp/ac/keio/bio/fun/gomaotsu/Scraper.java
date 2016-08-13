@@ -98,7 +98,7 @@ public class Scraper {
     }
     System.out.println(" Done.");
     if (errList.size() > 0) {
-      System.out.println("Friend not found for following otomes.Please check" + 
+      System.out.println("Friend not found for following otomes. Please check" + 
           System.getProperty("line.separator") + baseURL + " and fix its entry.");
       for (Otome o : errList) {
         System.out.println(o.getId() + ":" + o.getName());
