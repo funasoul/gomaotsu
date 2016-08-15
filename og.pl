@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# Last modified: Tue, 16 Aug 2016 08:38:55 +0900
+# Last modified: Tue, 16 Aug 2016 08:58:10 +0900
 #
 # Requirement: This script requires Unicode::GCString to be installed
 # on your system..
@@ -8,6 +8,8 @@
 #
 use strict;
 use warnings;
+
+our $VERSION = '1.0.0';
 
 # Otome File (Change this!!)
 my $otomelist = "/Users/funa/git/gomaotsu/OtomeList.csv";
@@ -39,7 +41,7 @@ my %otomes;
 (my $myname= $0) =~ s,.*[/\\],,;
 
 my $usage = <<_eou_;
-Otome Grep script.
+Otome Grep script version $VERSION.
 This script will grep through your OtomeList.csv and prints out the results.
 Usage:  $myname [-hmv] [-c otomename] [-p otomename] [keyword1 keyword2 ...]
             -h --help      ... Show this message
