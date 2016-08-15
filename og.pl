@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# Last modified: Tue, 16 Aug 2016 08:26:22 +0900
+# Last modified: Tue, 16 Aug 2016 08:38:55 +0900
 #
 # Requirement: This script requires Unicode::GCString to be installed
 # on your system..
@@ -72,15 +72,19 @@ read_otomelist();
 read_friendlist();
 
 # here we go.
-if (isFindParent() || isFindChild()) {  # find parent or child
+if (isFindParent()) { # find parent
   foreach my $id (keys(%otomes)) {
-    if (isFindParent() && $otomes{$id}->{name} =~ /$opt_parent_of/) { # find parent
+    if ($otomes{$id}->{name} =~ /$opt_parent_of/) {
       mark_parents_of($id);
-    } elsif (isFindChild() && $otomes{$id}->{name} =~ /$opt_child_of/) { # find child
+    }
+  }
+} elsif (isFindChild()) { # find child
+  foreach my $id (keys(%otomes)) {
+    if ($otomes{$id}->{name} =~ /$opt_child_of/) {
       mark_children_of($id);
     }
   }
-} else {  # at first, mark only owned otome (if opt_verbose is set, mark all)
+} else { # at first, mark only owned otome (if opt_verbose is set, mark all)
   foreach my $id (keys(%otomes)) {
     if ($opt_verbose) {
       $otomes{$id}->{match} = 1;
@@ -339,13 +343,13 @@ sub toString {
 
 sub conv_zenkaku {
   my $str = shift;
-#  $str =~ tr/０-９Ａ-Ｚａ-ｚ/0-9A-Za-z/; # I hate zenkaku chars
+  $str =~ tr/０-９Ａ-Ｚａ-ｚ/0-9A-Za-z/; # I hate zenkaku chars
   $str =~ s/【/[/g;   # I hate zenkaku brackets
   $str =~ s/】/] /g;  # I hate zenkaku brackets
-#  $str =~ s/（/(/g;   # I hate zenkaku brackets
-#  $str =~ s/）/)/g;   # I hate zenkaku brackets
-#  $str =~ s/\(/ (/g;
-#  $str =~ s/\s+\(/ (/g;
+  $str =~ s/（/(/g;   # I hate zenkaku brackets
+  $str =~ s/）/)/g;   # I hate zenkaku brackets
+  $str =~ s/\(/ (/g;
+  $str =~ s/\s+\(/ (/g;
   return $str;
 }
 
