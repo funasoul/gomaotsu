@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# Last modified: Mon, 15 Aug 2016 05:14:53 +0900
+# Last modified: Tue, 16 Aug 2016 07:08:14 +0900
 #
 # Requirement: This script requires Unicode::GCString to be installed
 # on your system..
@@ -44,6 +44,7 @@ This script will grep through your OtomeList.csv and prints out the results.
 Usage:  $myname [-hm] [-c otomename] [-p otomename] [keyword1 keyword2 ...]
             -h --help      ... Show this message
             -m --mpsort    ... Sort by MP
+            -v --verbose   ... Print Otome which you don't have
             -c, --childof  ... Print child of specified Otome
             -p, --parentof ... Print parent of specified Otome
     If no argument is set, it prints all Otome you have.
@@ -56,10 +57,11 @@ _eol_
 # Parse options
 my $opt_help = 0;
 my $opt_sortbyMP = 0;
+my $opt_verbose = 0;
 my $opt_child_of = "";
 my $opt_parent_of = "";
 
-GetOptions('help|h' => \$opt_help, 'mpsort|m' => \$opt_sortbyMP, 'childof|c=s' => \$opt_child_of, 'parentof|p=s' => \$opt_parent_of) || die($usage);
+GetOptions('help|h' => \$opt_help, 'mpsort|m' => \$opt_sortbyMP, 'verbose|v' => \$opt_verbose, 'childof|c=s' => \$opt_child_of, 'parentof|p=s' => \$opt_parent_of) || die($usage);
 if ($opt_help) {
   print $usage_long;
   exit;
@@ -69,13 +71,15 @@ if ($opt_help) {
 read_otomelist();
 read_friendlist();
 
-# 
+# here we go.
 if (isFindParent() || isFindChild()) {  # find parent or child
   foreach my $id (keys(%otomes)) {
     $otomes{$id}->{match} = 0;
     if (isFindParent()) {
       if ($otomes{$id}->{name} =~ /$opt_parent_of/) {
-        $otomes{$id}->{match} = 1;
+        foreach my $fname (@{$otomes{$id}->{flist}}) {
+          mark_otome_by_name($fname);
+        }
       }
     }
     # find child
@@ -83,53 +87,62 @@ if (isFindParent() || isFindChild()) {  # find parent or child
       next;
     }
   }
-} else {  # grep like function
+} else {  # at first, mark only owned otome (if opt_verbose is set, mark all)
   foreach my $id (keys(%otomes)) {
-    $otomes{$id}->{match} = $otomes{$id}->{own};
-    foreach my $arg (@ARGV) {
-      # if $arg is 1, 2, 3, 4, 5, 6, then match with hoshi only.
-      if (isInt($arg) == 1 and $arg > 0 and $arg < 7) {
-        if ($otomes{$id}->{hoshi} ne $arg) {
-          $otomes{$id}->{match} = 0;
-          last;
-        } else {
-          next;
-        }
-      }
-      $arg = "火" if $arg eq "炎";
-      $arg = "火" if $arg eq "赤";
-      $arg = "水" if $arg eq "青";
-      $arg = "風" if $arg eq "緑";
-      $arg = "光" if $arg eq "白";
-      $arg = "闇" if $arg eq "紫";
-      $arg = "闇" if $arg eq "黒";
-      # if $arg is 火,水,風,光,闇 then match with zokusei only.
-      if ($arg eq "火" or $arg eq "水" or $arg eq "風" or $arg eq "光" or $arg eq "闇") {
-        if ($otomes{$id}->{zokusei} ne $arg) {
-          $otomes{$id}->{match} = 0;
-          last;
-        } else {
-          next;
-        }
-      }
-      # if $arg is 未,満 then match with love only.
-      if ($arg eq "未" or $arg eq "満") {
-        if (($arg eq "未" and $otomes{$id}->{love} != 0) or ($arg eq "満" and $otomes{$id}->{love} != 1)) {
-          $otomes{$id}->{match} = 0;
-          last;
-        } else {
-          next;
-        }
-      }
-      # case insensitive match.
-      if (toString($id) !~ /$arg/i) {
-        $otomes{$id}->{match} = 0;
-        last;
-      }
+    if ($opt_verbose) {
+      $otomes{$id}->{match} = 1;
+    } else {
+      $otomes{$id}->{match} = $otomes{$id}->{own};
     }
   }
 }
 
+# grep like function
+foreach my $id (keys(%otomes)) {
+  foreach my $arg (@ARGV) {
+    # if $arg is 1, 2, 3, 4, 5, 6, then match with hoshi only.
+    if (isInt($arg) == 1 and $arg > 0 and $arg < 7) {
+      if ($otomes{$id}->{hoshi} ne $arg) {
+        $otomes{$id}->{match} = 0;
+        last;
+      } else {
+        next;
+      }
+    }
+    $arg = "火" if $arg eq "炎";
+    $arg = "火" if $arg eq "赤";
+    $arg = "水" if $arg eq "青";
+    $arg = "風" if $arg eq "緑";
+    $arg = "光" if $arg eq "白";
+    $arg = "闇" if $arg eq "紫";
+    $arg = "闇" if $arg eq "黒";
+    # if $arg is 火,水,風,光,闇 then match with zokusei only.
+    if ($arg eq "火" or $arg eq "水" or $arg eq "風" or $arg eq "光" or $arg eq "闇") {
+      if ($otomes{$id}->{zokusei} ne $arg) {
+        $otomes{$id}->{match} = 0;
+        last;
+      } else {
+        next;
+      }
+    }
+    # if $arg is 未,満 then match with love only.
+    if ($arg eq "未" or $arg eq "満") {
+      if (($arg eq "未" and $otomes{$id}->{love} != 0) or ($arg eq "満" and $otomes{$id}->{love} != 1)) {
+        $otomes{$id}->{match} = 0;
+        last;
+      } else {
+        next;
+      }
+    }
+    # case insensitive match.
+    if (toString($id) !~ /$arg/i) {
+      $otomes{$id}->{match} = 0;
+      last;
+    }
+  }
+}
+
+# print marked Otomes.
 if ($opt_sortbyMP == 1) {
   foreach my $id (sort{ $otomes{$b}->{'mp'} <=> $otomes{$a}->{'mp'} or
     $otomes{$a}->{'zokusei'} cmp $otomes{$b}->{'zokusei'} or
@@ -155,6 +168,18 @@ if ($opt_sortbyMP == 1) {
   }
 }
 
+## Functions
+sub mark_otome_by_name {
+  my $name = shift;
+  foreach my $id (keys(%otomes)) {
+    next if ($otomes{$id}->{own} eq 0 && !$opt_verbose);
+    if ($otomes{$id}->{name} eq $name) {
+      $otomes{$id}->{match} = 1;
+      last;
+    }
+  }
+}
+
 sub read_otomelist {
   open(IN, "<:utf8", $otomelist) or die "Cannot open file\n";
   while(<IN>){
@@ -164,29 +189,20 @@ sub read_otomelist {
     #  0,  1, 2  ,  3   ,  4   , 5  , 6, 7  ,     8      ,     9    ,   10   ,    11    , 12 ,  13
     # #No.,星,属性,使い魔,コスト,魔力,HP,分類,ショット種類,スキル種類,スキル名,スキル効果,所持,親密度max
     my $id      = $array[0];
-    my $hoshi   = $array[1];
-    my $zokusei = $array[2];
-    my $name    = $array[3];
-    $name =~ s/【/[/;   # I hate zenkaku brackets
-    $name =~ s/】/] /;  # I hate zenkaku brackets
-    my $mp      = $array[5];
-    my $hp      = $array[6];
-    my $bunrui  = $array[7];
-    my $shot    = $array[8];
-    my $skill   = $array[9];
-    my $own     = $array[12];
-    my $love    = $array[13];
     next if ($id =~ /^#/);
-    $otomes{$id}->{hoshi}   = $hoshi;
-    $otomes{$id}->{zokusei} = $zokusei;
-    $otomes{$id}->{name}    = $name;
-    $otomes{$id}->{mp}      = $mp;
-    $otomes{$id}->{hp}      = $hp;
-    $otomes{$id}->{bunrui}  = $bunrui;
-    $otomes{$id}->{shot}    = $shot;
-    $otomes{$id}->{skill}   = $skill;
-    $otomes{$id}->{own}     = $own;
-    $otomes{$id}->{love}    = $love;
+    $otomes{$id}->{hoshi}      = $array[1];
+    $otomes{$id}->{zokusei}    = $array[2];
+    $otomes{$id}->{name}       = conv_zenkaku($array[3]);
+    $otomes{$id}->{cost}       = $array[4];
+    $otomes{$id}->{mp}         = $array[5];
+    $otomes{$id}->{hp}         = $array[6];
+    $otomes{$id}->{bunrui}     = $array[7];
+    $otomes{$id}->{shot}       = $array[8];
+    $otomes{$id}->{skill}      = conv_zenkaku($array[9]);
+    $otomes{$id}->{skillname}  = $array[10];
+    $otomes{$id}->{skillkouka} = conv_zenkaku($array[11]);
+    $otomes{$id}->{own}        = $array[12];
+    $otomes{$id}->{love}       = $array[13];
   }
   close(IN);
 }
@@ -195,8 +211,9 @@ sub read_friendlist {
   open(FIN, "<:utf8", $friendlist) or die "Cannot open file\n";
   while(<FIN>) {
     chomp;
-    my ($id, @farray) = (split(","));
-    $otomes{$id}->{farray}   = @farray;
+    my $line = conv_zenkaku($_);
+    my ($id, @flist) = (split(",", $line));
+    $otomes{$id}->{flist}   = \@flist;
   }
   close(FIN);
 }
@@ -275,13 +292,17 @@ sub print_love {
   if ($otomes{$id}->{love} == 1) {
     print_color("満", $red);
   } else {
-    print_color("未", $cyan);
+    if ($otomes{$id}->{own} ==1) {
+      print_color("未", $cyan);
+    } else {
+      print_color("未", $yellow);
+    }
   }
 }
 
 sub print_name {
   my $id = shift;
-  print_string($otomes{$id}->{name}, 20);
+  print_string($otomes{$id}->{name}, 22);
 }
 
 sub toString {
@@ -296,7 +317,20 @@ sub toString {
   $str .= $otomes{$id}->{hp} . ",";
   $str .= $otomes{$id}->{bunrui} . ",";
   $str .= $otomes{$id}->{shot} . ",";
-  $str .= $otomes{$id}->{skill};
+  $str .= $otomes{$id}->{skill} . ",";
+  $str .= $otomes{$id}->{skillkouka};
+  return $str;
+}
+
+sub conv_zenkaku {
+  my $str = shift;
+  $str =~ tr/０-９Ａ-Ｚａ-ｚ/0-9A-Za-z/; # I hate zenkaku chars
+  $str =~ s/【/[/g;   # I hate zenkaku brackets
+  $str =~ s/】/] /g;  # I hate zenkaku brackets
+  $str =~ s/（/(/g;   # I hate zenkaku brackets
+  $str =~ s/）/)/g;   # I hate zenkaku brackets
+  $str =~ s/\(/ (/g;
+  $str =~ s/\s+\(/ (/g;
   return $str;
 }
 
