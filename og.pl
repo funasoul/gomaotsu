@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# Last modified: Tue, 16 Aug 2016 07:08:14 +0900
+# Last modified: Tue, 16 Aug 2016 08:26:22 +0900
 #
 # Requirement: This script requires Unicode::GCString to be installed
 # on your system..
@@ -41,10 +41,10 @@ my %otomes;
 my $usage = <<_eou_;
 Otome Grep script.
 This script will grep through your OtomeList.csv and prints out the results.
-Usage:  $myname [-hm] [-c otomename] [-p otomename] [keyword1 keyword2 ...]
+Usage:  $myname [-hmv] [-c otomename] [-p otomename] [keyword1 keyword2 ...]
             -h --help      ... Show this message
             -m --mpsort    ... Sort by MP
-            -v --verbose   ... Print Otome which you don't have
+            -v --verbose   ... Print Otome even if you don't have it
             -c, --childof  ... Print child of specified Otome
             -p, --parentof ... Print parent of specified Otome
     If no argument is set, it prints all Otome you have.
@@ -74,17 +74,10 @@ read_friendlist();
 # here we go.
 if (isFindParent() || isFindChild()) {  # find parent or child
   foreach my $id (keys(%otomes)) {
-    $otomes{$id}->{match} = 0;
-    if (isFindParent()) {
-      if ($otomes{$id}->{name} =~ /$opt_parent_of/) {
-        foreach my $fname (@{$otomes{$id}->{flist}}) {
-          mark_otome_by_name($fname);
-        }
-      }
-    }
-    # find child
-    if (isFindChild()) {
-      next;
+    if (isFindParent() && $otomes{$id}->{name} =~ /$opt_parent_of/) { # find parent
+      mark_parents_of($id);
+    } elsif (isFindChild() && $otomes{$id}->{name} =~ /$opt_child_of/) { # find child
+      mark_children_of($id);
     }
   }
 } else {  # at first, mark only owned otome (if opt_verbose is set, mark all)
@@ -144,11 +137,11 @@ foreach my $id (keys(%otomes)) {
 
 # print marked Otomes.
 if ($opt_sortbyMP == 1) {
-  foreach my $id (sort{ $otomes{$b}->{'mp'} <=> $otomes{$a}->{'mp'} or
-    $otomes{$a}->{'zokusei'} cmp $otomes{$b}->{'zokusei'} or
-    $otomes{$b}->{'hoshi'} <=> $otomes{$a}->{'hoshi'} or
-    $otomes{$b}->{'bunrui'} cmp $otomes{$a}->{'bunrui'} or
-    $otomes{$b}->{'shot'} cmp $otomes{$a}->{'shot'}
+  foreach my $id (sort{ $otomes{$b}->{mp} <=> $otomes{$a}->{mp} or
+    $otomes{$a}->{zokusei} cmp $otomes{$b}->{zokusei} or
+    $otomes{$b}->{hoshi} <=> $otomes{$a}->{hoshi} or
+    $otomes{$b}->{bunrui} cmp $otomes{$a}->{bunrui} or
+    $otomes{$b}->{shot} cmp $otomes{$a}->{shot}
     } keys(%otomes)) {
     if ($otomes{$id}->{match} == 1) {
       print_line($id);
@@ -156,11 +149,11 @@ if ($opt_sortbyMP == 1) {
   }
 } else {
   # Arghhh.... yuck.
-  foreach my $id (sort{ $otomes{$a}->{'zokusei'} cmp $otomes{$b}->{'zokusei'} or
-    $otomes{$b}->{'hoshi'} <=> $otomes{$a}->{'hoshi'} or
-    $otomes{$b}->{'bunrui'} cmp $otomes{$a}->{'bunrui'} or
-    $otomes{$b}->{'shot'} cmp $otomes{$a}->{'shot'} or
-    $otomes{$b}->{'mp'} <=> $otomes{$a}->{'mp'}
+  foreach my $id (sort{ $otomes{$a}->{zokusei} cmp $otomes{$b}->{zokusei} or
+    $otomes{$b}->{hoshi} <=> $otomes{$a}->{hoshi} or
+    $otomes{$b}->{bunrui} cmp $otomes{$a}->{bunrui} or
+    $otomes{$b}->{shot} cmp $otomes{$a}->{shot} or
+    $otomes{$b}->{mp} <=> $otomes{$a}->{mp}
     } keys(%otomes)) {
     if ($otomes{$id}->{match} == 1) {
       print_line($id);
@@ -169,10 +162,31 @@ if ($opt_sortbyMP == 1) {
 }
 
 ## Functions
+sub mark_children_of {
+  my $id = shift;
+  # mark all children of $otomes{$id}
+  foreach my $child (keys(%otomes)) {
+    next if (!$otomes{$child}->{own} && !$opt_verbose);
+    foreach my $fname (@{$otomes{$child}->{flist}}) {
+      if ($otomes{$id}->{name} eq $fname) { # if $id is a parent of $child
+        $otomes{$child}->{match} = 1;
+      }
+    }
+  }
+}
+
+sub mark_parents_of {
+  my $id = shift;
+  # mark all parent of $otomes{$id}
+  foreach my $fname (@{$otomes{$id}->{flist}}) { 
+    mark_otome_by_name($fname);
+  }
+}
+
 sub mark_otome_by_name {
   my $name = shift;
   foreach my $id (keys(%otomes)) {
-    next if ($otomes{$id}->{own} eq 0 && !$opt_verbose);
+    next if (!$otomes{$id}->{own} && !$opt_verbose);
     if ($otomes{$id}->{name} eq $name) {
       $otomes{$id}->{match} = 1;
       last;
@@ -203,6 +217,7 @@ sub read_otomelist {
     $otomes{$id}->{skillkouka} = conv_zenkaku($array[11]);
     $otomes{$id}->{own}        = $array[12];
     $otomes{$id}->{love}       = $array[13];
+    $otomes{$id}->{match}      = 0; # initilaize
   }
   close(IN);
 }
@@ -324,13 +339,13 @@ sub toString {
 
 sub conv_zenkaku {
   my $str = shift;
-  $str =~ tr/０-９Ａ-Ｚａ-ｚ/0-9A-Za-z/; # I hate zenkaku chars
+#  $str =~ tr/０-９Ａ-Ｚａ-ｚ/0-9A-Za-z/; # I hate zenkaku chars
   $str =~ s/【/[/g;   # I hate zenkaku brackets
   $str =~ s/】/] /g;  # I hate zenkaku brackets
-  $str =~ s/（/(/g;   # I hate zenkaku brackets
-  $str =~ s/）/)/g;   # I hate zenkaku brackets
-  $str =~ s/\(/ (/g;
-  $str =~ s/\s+\(/ (/g;
+#  $str =~ s/（/(/g;   # I hate zenkaku brackets
+#  $str =~ s/）/)/g;   # I hate zenkaku brackets
+#  $str =~ s/\(/ (/g;
+#  $str =~ s/\s+\(/ (/g;
   return $str;
 }
 
