@@ -70,7 +70,8 @@ public class Otome implements Serializable, Comparable<Otome> {
    * @return
    */
   public boolean isVariant(String vname) {
-    if (this.name.contains(vname)) {
+    //if (this.name.contains(vname)) {
+    if (this.name.endsWith(vname)) {
       return true;
     }
     return false;
