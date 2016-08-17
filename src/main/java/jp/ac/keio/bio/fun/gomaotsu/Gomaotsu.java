@@ -42,6 +42,8 @@ public class Gomaotsu {
   private boolean forGuild = false;
   @Option(name="-a", aliases={"--add"}, usage="always add 5 otome to graph") // 5乙女は必ずグラフに描画するか
   private boolean add5OtometoGraph = false;
+  @Option(name="-A", aliases={"--addAllParent"}, usage="always add parent(dst) otome to graph") // 矢印の先となる乙女は必ずグラフに描画するか
+  private boolean addAllParenttoGraph = false;
 
   //receives other command line parameters than options
   @Argument
@@ -241,6 +243,20 @@ public class Gomaotsu {
   }
 
   /**
+   * @return the addAllParenttoGraph
+   */
+  public boolean isAddAllParenttoGraph() {
+    return addAllParenttoGraph;
+  }
+
+  /**
+   * @param addAllParenttoGraph the addAllParenttoGraph to set
+   */
+  public void setAddAllParenttoGraph(boolean addAllParenttoGraph) {
+    this.addAllParenttoGraph = addAllParenttoGraph;
+  }
+
+  /**
    * ギルドバトル用の編成か
    * @return the forGuild
    */
@@ -319,11 +335,9 @@ public class Gomaotsu {
       if (forGuild) { // ギルドバトル用
         if (src.isZentaiSkill() && (dst.isRecommendedForGuild() || (isAdd5OtometoGraph() && dst.is5Otome()))) { // ギルドバトル用
           return true;
-        } else {
-          return false;
         }
       } else { // 通常用
-        if (!dst.isLoveMax() || (isAdd5OtometoGraph() && dst.is5Otome())) {
+        if (!dst.isLoveMax() || (isAdd5OtometoGraph() && dst.is5Otome()) || isAddAllParenttoGraph()) {
           return true;
         }
       }
