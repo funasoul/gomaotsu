@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# Last modified: Tue, 16 Aug 2016 08:58:10 +0900
+# Last modified: Sat, 20 Aug 2016 01:57:14 +0900
 #
 # Requirement: This script requires Unicode::GCString to be installed
 # on your system..
@@ -45,6 +45,7 @@ Otome Grep script version $VERSION.
 This script will grep through your OtomeList.csv and prints out the results.
 Usage:  $myname [-hmv] [-c otomename] [-p otomename] [keyword1 keyword2 ...]
             -h --help      ... Show this message
+            -i --id        ... Print Id.
             -m --mpsort    ... Sort by MP
             -v --verbose   ... Print Otome even if you don't have it
             -c, --childof  ... Print child of specified Otome
@@ -59,11 +60,12 @@ _eol_
 # Parse options
 my $opt_help = 0;
 my $opt_sortbyMP = 0;
+my $opt_printId = 0;
 my $opt_verbose = 0;
 my $opt_child_of = "";
 my $opt_parent_of = "";
 
-GetOptions('help|h' => \$opt_help, 'mpsort|m' => \$opt_sortbyMP, 'verbose|v' => \$opt_verbose, 'childof|c=s' => \$opt_child_of, 'parentof|p=s' => \$opt_parent_of) || die($usage);
+GetOptions('help|h' => \$opt_help, 'mpsort|m' => \$opt_sortbyMP, 'id|i' => \$opt_printId, 'verbose|v' => \$opt_verbose, 'childof|c=s' => \$opt_child_of, 'parentof|p=s' => \$opt_parent_of) || die($usage);
 if ($opt_help) {
   print $usage_long;
   exit;
@@ -241,6 +243,7 @@ sub read_friendlist {
 
 sub print_line {
   my $id = shift;
+  print_id($id) if ($opt_printId);
   print_star($id);
   print_mp($id);
   print_bunrui($id);
