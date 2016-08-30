@@ -12,6 +12,7 @@ import java.util.HashMap;
 public final class Constants {
   public final static int nodeWeight = 5;
   public final static int edgeWeight = 5;
+  public final static String baseURL = "http://seesaawiki.jp/mahouotome/d/%C0%AD%C7%BD%C8%E6%B3%D3";
   public final static String otomeFileName = "OtomeList.csv";
   public final static String friendFileName = "FriendList.csv";
   public final static String stylesheet = "graph { padding: 45px; }"

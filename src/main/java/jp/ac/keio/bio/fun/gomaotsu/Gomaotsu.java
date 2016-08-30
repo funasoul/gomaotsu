@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -142,13 +143,35 @@ public class Gomaotsu {
   }
 
   /**
-   * 仲良し情報をWeb/fileから取得し、otomeSetに追加する
+   * 仲良し情報をWeb/fileから取得し、otomeSetに追加する。Wikiに反映されていない新しい乙女の場合、
+   * variantsを探し、variantsのfriendを追加する。
    * 
    * @param fromWeb
    *          trueならwebから情報を取得、falseならファイル(FriendList.csv)から取得する。
    */
   public void addFriendInfo(boolean fromWeb) {
-    sc.addFriendInfo(otomeSet, fromWeb);
+    TreeSet<Otome> errSet;   // Wikiに反映されていない新しい乙女のset
+    errSet = sc.addFriendInfo(otomeSet, fromWeb);
+    // Wikiに反映されていない乙女の friendSet を既にある乙女からコピー
+    for (Iterator<Otome> it = errSet.iterator(); it.hasNext();) {
+      Otome o = it.next();
+      for (Otome target: otomeSet) {
+        if (o.isVariant(target)) {    // o は target の variantか。("【人魚】カトレア" は "カトレア" のvariant)
+          o.setFriendSet(target.getFriendSet());  // variantなら、originalと同じ friendSet を持つはず
+          it.remove();  // errSet からこの乙女を削除
+          break;
+        }
+      }
+    }
+    System.out.println(" Done.");
+    // 未登録の friendList を持つ乙女を表示
+    if (errSet.size() > 0) {
+      System.out.println("Friend not found for following otomes. Please check" + 
+          System.getProperty("line.separator") + sc.getBaseURL() + " and fix its entry.");
+      for (Otome o : errSet) {
+        System.out.println(o.getId() + ":" + o.getName());
+      }
+    }
   }
 
   /**

@@ -70,13 +70,29 @@ public class Otome implements Serializable, Comparable<Otome> {
    * @return
    */
   public boolean isVariant(String vname) {
-    //if (this.name.contains(vname)) {
     if (this.name.endsWith(vname)) {
       return true;
     }
     return false;
   }
   
+  /**
+   * 引数で与えられた乙女の名前を持つか ("【人魚】カトレア" は引数 Otome("カトレア") に対してtrueを返す)
+   * @param votome
+   * @return
+   */
+  public boolean isVariant(Otome votome) {
+    if (this.name.endsWith(votome.getName())) {
+      return true;
+    }
+    return false;
+  }
+   
+  /**
+   * toString用 boolean -> "1"/"0" 変換
+   * @param b
+   * @return
+   */
   public String booleanToString(boolean b) {
     if (b) {
       return "1";

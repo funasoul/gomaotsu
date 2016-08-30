@@ -27,7 +27,7 @@ public class Scraper {
    * 
    */
   public Scraper() {
-    this.baseURL = "http://seesaawiki.jp/mahouotome/d/%C0%AD%C7%BD%C8%E6%B3%D3";
+    this.baseURL = Constants.baseURL;
   }
 
   public TreeSet<Otome> createOtomeSet() {
@@ -46,7 +46,7 @@ public class Scraper {
       int id = Integer.parseInt(sid);
       int hoshi = Integer.parseInt(cols.get(1).text());
       String zokusei = cols.get(2).text();
-      String name = cols.get(3).text();
+      String name = cols.get(3).text().replaceAll("\\?$", "");   // chomp last "?" in string.
       int cost = Integer.parseInt(cols.get(4).text());
       int maryoku = Integer.parseInt(cols.get(5).text());
       int hp = Integer.parseInt(cols.get(6).text());
@@ -69,12 +69,12 @@ public class Scraper {
     return otomeSet;
   }
   
-  public TreeSet<Otome> addFriendInfo(TreeSet<Otome> otomeList, boolean fromWeb) {
-    ArrayList<Otome> errList = new ArrayList<Otome>();
+  public TreeSet<Otome> addFriendInfo(TreeSet<Otome> otomeSet, boolean fromWeb) {
+    TreeSet<Otome> errSet = new TreeSet<Otome>();
     int count = 0;
-    int tick = (int)(otomeList.size()*0.05);
+    int tick = (int)(otomeSet.size()*0.05);
     System.out.print("Loading Otome... ");
-    for (Otome o : otomeList) {
+    for (Otome o : otomeSet) {
       count++;
       if (count > tick && count % tick == 0) {
         System.out.print("=");
@@ -82,29 +82,21 @@ public class Scraper {
       ArrayList<String> al;
       if (fromWeb) {
         al = this.getFriendListFromWeb(o);
-        if (al.size() == 0) errList.add(o);
+        if (al.size() == 0) errSet.add(o);
       } else {
         al = this.getFriendListFromFile(o);
       }
       // Add friend(and variants) to otome.
       // this is required only on getFriendListFromWeb, but just to make sure, it is also executed for FromFile.
       for (String friend : al) {
-        for (Otome target : otomeList) {
+        for (Otome target : otomeSet) {
           if (target.isVariant(friend)) {
             o.getFriendSet().add(target);
           }
         }
       }
     }
-    System.out.println(" Done.");
-    if (errList.size() > 0) {
-      System.out.println("Friend not found for following otomes. Please check" + 
-          System.getProperty("line.separator") + baseURL + " and fix its entry.");
-      for (Otome o : errList) {
-        System.out.println(o.getId() + ":" + o.getName());
-      }
-    }
-    return otomeList;
+    return errSet;
   }
 
   public Elements getOtomeTable() {
