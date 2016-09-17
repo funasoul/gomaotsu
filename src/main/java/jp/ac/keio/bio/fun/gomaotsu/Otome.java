@@ -271,6 +271,24 @@ public class Otome implements Serializable, Comparable<Otome> {
   }
   
   /**
+   * ショットが集中なら true を返す
+   * @return
+   */
+  public boolean isShuuchuu() {
+    if (bunrui.equals("集中")) return true;
+    return false;
+  }
+  
+  /**
+   * ショットが拡散なら true を返す
+   * @return
+   */
+  public boolean isKakusan() {
+    if (bunrui.equals("拡散")) return true;
+    return false;
+  }
+
+  /**
    * 属性を ASCII 文字で返す。sytlesheetの定義で必要。
    * @return
    */

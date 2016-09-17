@@ -1,5 +1,7 @@
 package jp.ac.keio.bio.fun.gomaotsu;
 
+import java.awt.event.InputEvent;
+import java.awt.event.KeyListener;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -8,6 +10,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
@@ -17,6 +21,9 @@ import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.stream.file.FileSinkGraphML;
+import org.graphstream.ui.view.Viewer;
+import org.graphstream.ui.view.ViewerListener;
+import org.graphstream.ui.view.ViewerPipe;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -30,13 +37,17 @@ import org.kohsuke.args4j.Option;
  * @author Akira Funahashi
  *
  */
-public class Gomaotsu {
+public class Gomaotsu implements ViewerListener {
   private TreeSet<Otome> otomeSet;
   private Scraper sc;
   private Graph graph;
+  private Viewer viewer;
+  protected boolean loop;
 
   @Option(name="-h", aliases={"--help"}, usage="display usage")
   private boolean isHelp = false;
+  @Option(name="-e", aliases={"--edit"}, usage="edit graph (click on nodes to remove)")
+  private boolean isEdit = false;
   @Option(name="-u", aliases={"--update"}, usage="download and update friendlist from web")
   private boolean updateFromWeb = false;
   @Option(name="-g", aliases={"--guild"}, usage="generate graph for guild battle")
@@ -51,6 +62,7 @@ public class Gomaotsu {
   private List<String> arguments = new ArrayList<String>();
 
   public Gomaotsu() {
+    loop = true;
     sc = new Scraper();
   }
 
@@ -93,6 +105,21 @@ public class Gomaotsu {
   public Otome getOtomeBySid(String sid) {
     for (Otome o : otomeSet) {
       if (o.getSid().equals(sid)) {
+        return o;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * 指定した名前 (String) を持つ乙女を返す
+   * 
+   * @param name
+   * @return
+   */
+  public Otome getOtomeByName(String name) {
+    for (Otome o : otomeSet) {
+      if (o.getName().equals(name)) {
         return o;
       }
     }
@@ -340,6 +367,34 @@ public class Gomaotsu {
     this.graph = graph;
   }
 
+  /**
+   * @return the viewer
+   */
+  public Viewer getViewer() {
+    return viewer;
+  }
+
+  /**
+   * @param viewer the viewer to set
+   */
+  public void setViewer(Viewer viewer) {
+    this.viewer = viewer;
+  }
+
+  /**
+   * @return the loop
+   */
+  public boolean isLoop() {
+    return loop;
+  }
+
+  /**
+   * @param loop the loop to set
+   */
+  public void setLoop(boolean loop) {
+    this.loop = loop;
+  }
+
   public void addOtomeToGraph(Otome o) {
     Node n = graph.addNode(o.getName());
     n.setAttribute("layout.weight", Constants.nodeWeight);
@@ -385,10 +440,84 @@ public class Gomaotsu {
   }
 
   public void drawGraph() {
-    getGraph().display();
+    viewer = getGraph().display();
+    viewer.setCloseFramePolicy(Viewer.CloseFramePolicy.HIDE_ONLY);
     for (Otome o : otomeSet) {
       for (Otome f : o.getFriendSet()) {
         addEdgeToGraph(o, f);
+      }
+    }
+    removeRedundantNodes();
+    // the graph becomes a sink for the viewer.
+    // We also install us as a viewer listener to intercept the graphic events.
+    ViewerPipe fromViewer = viewer.newViewerPipe();
+    fromViewer.addViewerListener(this);
+    fromViewer.addSink(graph);
+    // Then we need a loop to wait for events.
+    // In this loop we will need to call the pump() method to copy back events that have
+    // already occured in the viewer thread inside our thread.
+    while (loop) {
+      fromViewer.pump();
+    }
+  }
+  
+  /**
+   * Comparator for Node.
+   * Node is sorted by its ID's length.
+   * @author Akira Funahashi <funa@bio.keio.ac.jp>
+   *
+   */
+  class MyComp implements Comparator<Node> {
+    public int compare(Node o1, Node o2) {
+      return Integer.compare(o1.getId().length(), o2.getId().length());
+    }
+  }
+
+  /**
+   * Traverse graph and remove redundant nodes
+   * Definition of redundant Node:
+   *  1.  It is a variant of some otome, and
+   *  2.  It is not yet love max, and
+   *  3a. It is 拡散 shot and we already have 拡散 variant on the network or,
+   *  3b. It is 集中 shot and we already have 集中 variant on the network.
+   */
+  public void removeRedundantNodes() {
+    Iterator<Node> it = graph.getNodeIterator();
+    while (it.hasNext()) {
+      Node n = it.next();
+      Iterator<Edge> ie = n.getLeavingEdgeIterator();
+      ArrayList<Node> ln = new ArrayList<Node>();
+      while (ie.hasNext()) {
+        Edge e = ie.next();
+        Node tn = e.getTargetNode(); // tn is a parent of Node n.
+        ln.add(tn);
+      }
+      Collections.sort(ln, new MyComp());  // sort by the length of otome's name
+      for (int i = 0; i < ln.size(); i++) {
+        Node tni = ln.get(i);
+        Otome oi = getOtomeByName(tni.getId());
+        boolean hasShuuchuu = oi.isShuuchuu();
+        boolean hasKakusan = oi.isKakusan();
+        for (int j = ln.size()-1; j > i; j--) {
+          Node tnj = ln.get(j);
+          Otome oj = getOtomeByName(tnj.getId());
+          if (tnj.getId().endsWith(tni.getId()) && oj.isLoveMax()) {
+            if (oj.isKakusan()) {
+              if (hasKakusan) {
+                graph.removeNode(tnj);
+              } else {
+                hasKakusan = true;
+              }
+            }
+            if (oj.isShuuchuu()) {
+              if (hasShuuchuu) {
+                graph.removeNode(tnj);
+              } else {
+                hasShuuchuu = true;
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -405,6 +534,23 @@ public class Gomaotsu {
   public void displayUsage(CmdLineParser parser) {
     System.err.println("java -jar target/Gomaotsu-${version}-SNAPSHOT-jar-with-dependencies.jar [options...]");
     parser.printUsage(System.err);
+  }
+  
+  @Override
+  public void buttonPushed(String id) {
+    
+  }
+
+  @Override
+  public void buttonReleased(String id) {
+    if (isEdit) {
+      graph.removeNode(id);
+    }
+  }
+
+  @Override
+  public void viewClosed(String id) {
+    loop = false;
   }
 
   public static void main(String[] args) {
