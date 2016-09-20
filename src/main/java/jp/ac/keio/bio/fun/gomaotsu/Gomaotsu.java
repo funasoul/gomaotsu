@@ -553,9 +553,9 @@ public class Gomaotsu implements ViewerListener {
   }
 
   /**
-   * prints optimized combination of otome group
+   * Returns optimized combination of otome groups
    */
-  public void optimizeCombination() {
+  public HashMap<ArrayList<Node>, Double> optimizeCombination() {
     Iterator<Node> nodes = graph.getNodeIterator();
     ArrayList<Node> listOfShuuchuu = new ArrayList<Node>();
     ArrayList<Node> listOfKakusan  = new ArrayList<Node>();
@@ -599,6 +599,7 @@ public class Gomaotsu implements ViewerListener {
       }
     }
     treeMap.putAll(gainMap);
+    HashMap<ArrayList<Node>, Double> rtn = new HashMap<ArrayList<Node>, Double>();
     Iterator<Entry<ArrayList<Node>, Double>> it = treeMap.entrySet().iterator();
     if (it.hasNext()) {
       Entry<ArrayList<Node>, Double> e = it.next();
@@ -606,14 +607,35 @@ public class Gomaotsu implements ViewerListener {
       while(it.hasNext()) {
         e = it.next();
         if (e.getValue() < max) break;
-        System.out.println(entryToString(e));
+        rtn.put(e.getKey(), e.getValue());
       }
+    }
+    return rtn;
+  }
+  
+  public void printOptimizedComb(HashMap<ArrayList<Node>, Double> map) {
+    Iterator<Entry<ArrayList<Node>, Double>> it = map.entrySet().iterator();
+    int[] maxlens = new int[5];
+    while (it.hasNext()) {
+      Entry<ArrayList<Node>, Double> e = it.next();
+      ArrayList<Node> al = e.getKey();
+      for (int i = 0; i < al.size(); i++) {
+        maxlens[i] = Math.max(maxlens[i], StringUtil.getByteLength(al.get(i).getId()));
+      }
+    }
+    it = map.entrySet().iterator();
+    while (it.hasNext()) {
+      Entry<ArrayList<Node>, Double> e = it.next();
+      System.out.println(entryToString(e, maxlens));
     }
   }
   
-  public String entryToString(Entry<ArrayList<Node>, Double> e) {
-    String s = "[" + e.getKey().get(0) + "," + e.getKey().get(1) + "]" +
-    " (" + e.getKey().get(2) + "," + e.getKey().get(3) + "," + e.getKey().get(4) + ")";
+  public String entryToString(Entry<ArrayList<Node>, Double> e, int[] maxlens) {
+    String s = e.getValue() + ": [" +StringUtil.pad(e.getKey().get(0).getId(), maxlens[0]) + ", " +
+        StringUtil.pad(e.getKey().get(1).getId(), maxlens[1]) + "] - (" +
+        StringUtil.pad(e.getKey().get(2).getId(), maxlens[2]) + ", " +
+        StringUtil.pad(e.getKey().get(3).getId(), maxlens[3]) + ", " +
+        StringUtil.pad(e.getKey().get(4).getId(), maxlens[4]) + ")";
     return s;
   }
   
@@ -750,7 +772,8 @@ public class Gomaotsu implements ViewerListener {
     addFriendInfo(updateFromWeb);
     if (isOptimize) {
       generateGraph();
-      optimizeCombination();
+      HashMap<ArrayList<Node>, Double> map = optimizeCombination();
+      printOptimizedComb(map);
     } else {
       drawGraph();
       writeGraphML();
