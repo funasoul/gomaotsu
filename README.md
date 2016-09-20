@@ -1,6 +1,6 @@
 # Gomaotsu otomeList Visualizer
 Gomaotsu otomeList Visualizer will visualize your otome list.
-Not just visualize your otomelist, it will propose the optimized combination of your otomes (with -o option).
+Not just visualize your otomelist, it will propose the optimized combination of your otomes (with --optimize option).
 
 ![Otome network](./images/gomaotsu.png "Otome network")
 
