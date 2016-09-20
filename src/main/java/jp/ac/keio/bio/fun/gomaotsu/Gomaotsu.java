@@ -630,6 +630,8 @@ public class Gomaotsu implements ViewerListener {
     Otome ok = getOtomeByName(nk.getId());
     gain += getGainHoshi(os);
     gain += getGainHoshi(ok);
+    gain += getGainShot(os);
+    gain += getGainShot(ok);
     if (!os.isLoveMax()) gain += 300; // love max * 3
     if (!ok.isLoveMax()) gain += 300; // love max * 3
     for (Node n : supportNodes) {
@@ -660,6 +662,17 @@ public class Gomaotsu implements ViewerListener {
     if (o.getHoshi() == 3) return 46;
     else if (o.getHoshi() == 4) return 19;
     else return 10;
+  }
+  
+  /**
+   * Returns a gain (actually, penalty) of shot
+   * @param o
+   * @return
+   */
+  public int getGainShot(Otome o) {
+    if (o.getShot().equals("サイドショット") || o.getShot().equals("マジカレーザー")
+        || o.getShot().equals("ホーミング") || o.getShot().equals("スプラッシュ")) return -2; // I hate them!
+    return 0;
   }
   
   /**
