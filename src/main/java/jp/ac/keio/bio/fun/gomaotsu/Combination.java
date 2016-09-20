@@ -5,6 +5,7 @@ import java.util.ArrayList;
 public class Combination {
   private int[] c;
   private int n, k, count;
+  private boolean isOneOrigin;
   private ArrayList<ArrayList<Integer>> listOfCombinations;
 
   public Combination(int n, int k) {
@@ -12,6 +13,12 @@ public class Combination {
     this.k = k;
     count = getCombinationNum(n, k);
     c = new int[count];
+    isOneOrigin = false;
+  }
+  
+  public Combination(int n, int k, boolean oneOrigin) {
+    this(n, k);
+    this.isOneOrigin = oneOrigin;
   }
 
   public int getCombinationNum(int n, int k) {
@@ -43,7 +50,8 @@ public class Combination {
   public void addOneComb() {
     ArrayList<Integer> al = new ArrayList<Integer>();
     for (int i = 1; i <= k; i++) {
-      al.add(c[i]-1);
+      if (isOneOrigin) al.add(c[i]); // one-origin
+      else al.add(c[i]-1);           // zero-origin
     }
     listOfCombinations.add(al);
   }
@@ -83,11 +91,19 @@ public class Combination {
     return count;
   }
 
+  /**
+   * @return the isOneOrigin
+   */
+  public boolean isOneOrigin() {
+    return isOneOrigin;
+  }
+
   public static void main(String[] args) {
     int n, k;
     n = 21;
     k = 3;
-    Combination c = new Combination(n, k);
+    Combination c = new Combination(n, k); // zero-origin
+    //Combination c = new Combination(n, k, true); // one-origin
     ArrayList<ArrayList<Integer>> comb = c.getListOfCombinations();
     for (ArrayList<Integer> al : comb) {
       System.out.println(al);
