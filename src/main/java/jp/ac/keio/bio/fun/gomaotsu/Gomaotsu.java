@@ -131,6 +131,21 @@ public class Gomaotsu implements ViewerListener {
   }
 
   /**
+   * 指定した Node の乙女を返す
+   * 
+   * @param name
+   * @return
+   */
+  public Otome getOtomeByNode(Node node) {
+    for (Otome o : otomeSet) {
+      if (o.getName().equals(node.getId())) {
+        return o;
+      }
+    }
+    return null;
+  }
+  
+  /**
    * 引数に与えられた String が "1" か "true"(ignore case) ならば true を返す
    * 
    * @param s
@@ -525,12 +540,12 @@ public class Gomaotsu implements ViewerListener {
       Collections.sort(ln, new StringLengthComparator());  // sort by the length of otome's name
       for (int i = 0; i < ln.size(); i++) {
         Node tni = ln.get(i);
-        Otome oi = getOtomeByName(tni.getId());
+        Otome oi = getOtomeByNode(tni);
         boolean hasShuuchuu = oi.isShuuchuu();
         boolean hasKakusan = oi.isKakusan();
         for (int j = ln.size()-1; j > i; j--) {
           Node tnj = ln.get(j);
-          Otome oj = getOtomeByName(tnj.getId());
+          Otome oj = getOtomeByNode(tnj);
           if (tnj.getId().endsWith(tni.getId()) && oj.isLoveMax()) {
             if (oj.isKakusan()) {
               if (hasKakusan) {
@@ -561,7 +576,7 @@ public class Gomaotsu implements ViewerListener {
     ArrayList<Node> listOfKakusan  = new ArrayList<Node>();
     while (nodes.hasNext()) {
       Node n = nodes.next();
-      Otome o = getOtomeByName(n.getId());
+      Otome o = getOtomeByNode(n);
       if (o.isShuuchuu()) {
         listOfShuuchuu.add(n);
       } else if (o.isKakusan()) {
@@ -631,11 +646,16 @@ public class Gomaotsu implements ViewerListener {
   }
   
   public String entryToString(Entry<ArrayList<Node>, Double> e, int[] maxlens) {
-    String s = e.getValue() + ": [" +StringUtil.pad(e.getKey().get(0).getId(), maxlens[0]) + ", " +
-        StringUtil.pad(e.getKey().get(1).getId(), maxlens[1]) + "] - (" +
-        StringUtil.pad(e.getKey().get(2).getId(), maxlens[2]) + ", " +
-        StringUtil.pad(e.getKey().get(3).getId(), maxlens[3]) + ", " +
-        StringUtil.pad(e.getKey().get(4).getId(), maxlens[4]) + ")";
+    Otome o0 = getOtomeByNode(e.getKey().get(0));
+    Otome o1 = getOtomeByNode(e.getKey().get(1));
+    Otome o2 = getOtomeByNode(e.getKey().get(2));
+    Otome o3 = getOtomeByNode(e.getKey().get(3));
+    Otome o4 = getOtomeByNode(e.getKey().get(4));
+    String s = e.getValue() + ": [" + o0.getColoredString() + StringUtil.pad(o0.getName(), maxlens[0]) + Constants.RESET + ", " +
+        o1.getColoredString() + StringUtil.pad(o1.getName(), maxlens[1]) + Constants.RESET + "] - (" +
+        o2.getColoredString() + StringUtil.pad(o2.getName(), maxlens[2]) + Constants.RESET + ", " +
+        o3.getColoredString() + StringUtil.pad(o3.getName(), maxlens[3]) + Constants.RESET + ", " +
+        o4.getColoredString() + StringUtil.pad(o4.getName(), maxlens[4]) + Constants.RESET + ")";
     return s;
   }
   
@@ -648,8 +668,8 @@ public class Gomaotsu implements ViewerListener {
    */
   public double calcGain(Node ns, Node nk, ArrayList<Node> supportNodes) {
     double gain = 0D;
-    Otome os = getOtomeByName(ns.getId());
-    Otome ok = getOtomeByName(nk.getId());
+    Otome os = getOtomeByNode(ns);
+    Otome ok = getOtomeByNode(nk);
     gain += getGainHoshi(os);
     gain += getGainHoshi(ok);
     gain += getGainShot(os);
@@ -657,7 +677,7 @@ public class Gomaotsu implements ViewerListener {
     if (!os.isLoveMax()) gain += 300; // love max * 3
     if (!ok.isLoveMax()) gain += 300; // love max * 3
     for (Node n : supportNodes) {
-      Otome o = getOtomeByName(n.getId());
+      Otome o = getOtomeByNode(n);
       gain += getGainHoshi(o);
       if (n.hasEdgeToward(ns) && o.getZokusei().equals(os.getZokusei())) { // if zokusei is same
         gain += 1;

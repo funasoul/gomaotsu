@@ -109,6 +109,18 @@ public class Otome implements Serializable, Comparable<Otome> {
     return s;
   }
   
+  public String getColoredString() {
+    String color = "";
+    if (getZokusei().equals("火")) color = Constants.RED;
+    else if (getZokusei().equals("水")) color = Constants.CYAN;
+    else if (getZokusei().equals("風")) color = Constants.GREEN;
+    else if (getZokusei().equals("闇")) color = Constants.PURPLE;
+    String s = color + "★ " + getHoshi();
+    if (!isLoveMax()) s += Constants.YELLOW;
+    else s += Constants.RESET;
+    return s;
+  }
+  
   public boolean is5Otome() {
     if (name.equals("ラナン") || name.equals("カトレア") || name.equals("スフレ") ||
         name.equals("プルメリア") || name.equals("ロザリー") ) {
