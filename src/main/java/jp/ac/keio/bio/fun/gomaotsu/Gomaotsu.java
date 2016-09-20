@@ -419,7 +419,7 @@ public class Gomaotsu implements ViewerListener {
           return true;
         }
       } else { // 通常用
-        if (!dst.isLoveMax() || (isAdd5OtometoGraph() && dst.is5Otome()) || isAddAllParenttoGraph()) {
+        if (!dst.isLoveMax() || (isAdd5OtometoGraph() && dst.is5Otome()) || isAddAllParenttoGraph() || isOptimize) {
           return true;
         }
       }
