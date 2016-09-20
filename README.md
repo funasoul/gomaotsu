@@ -1,5 +1,6 @@
 # Gomaotsu otomeList Visualizer
 Gomaotsu otomeList Visualizer will visualize your otome list.
+Not just visualize your otomelist, it will propose the optimized combination of your otomes (with -o option).
 
 ![Otome network](./images/gomaotsu.png "Otome network")
 
@@ -26,10 +27,13 @@ mvn clean package
 #### Launch from command line
 ```sh
 java -jar target/Gomaotsu-${version}-SNAPSHOT-jar-with-dependencies.jar [options...]
- -a (--add)    : always add 5 otome to graph (default: false)
- -g (--guild)  : generate graph for guild battle (default: false)
- -h (--help)   : display usage (default: false)
- -u (--update) : download and update friendlist from web (default: false)
+ -A (--addAllParent) : always add parent(dst) otome to graph (default: false)
+ -a (--add)          : always add 5 otome to graph (default: false)
+ -e (--edit)         : edit graph (click on nodes to remove) (default: false)
+ -g (--guild)        : generate graph for guild battle (default: false)
+ -h (--help)         : display usage (default: true)
+ -o (--optimize)     : prints optimized combination of otome group (default: false)
+ -u (--update)       : download and update friendlist from web (default: false)
 ```
 
 Or, you can import this project to Eclipse as follows:
