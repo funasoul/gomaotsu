@@ -1,7 +1,5 @@
 package jp.ac.keio.bio.fun.gomaotsu;
 
-import java.awt.event.InputEvent;
-import java.awt.event.KeyListener;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -12,8 +10,12 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.graphstream.graph.Edge;
@@ -46,16 +48,18 @@ public class Gomaotsu implements ViewerListener {
 
   @Option(name="-h", aliases={"--help"}, usage="display usage")
   private boolean isHelp = false;
-  @Option(name="-e", aliases={"--edit"}, usage="edit graph (click on nodes to remove)")
-  private boolean isEdit = false;
-  @Option(name="-u", aliases={"--update"}, usage="download and update friendlist from web")
-  private boolean updateFromWeb = false;
-  @Option(name="-g", aliases={"--guild"}, usage="generate graph for guild battle")
-  private boolean forGuild = false;
   @Option(name="-a", aliases={"--add"}, usage="always add 5 otome to graph") // 5乙女は必ずグラフに描画するか
   private boolean add5OtometoGraph = false;
   @Option(name="-A", aliases={"--addAllParent"}, usage="always add parent(dst) otome to graph") // 矢印の先となる乙女は必ずグラフに描画するか
   private boolean addAllParenttoGraph = false;
+  @Option(name="-e", aliases={"--edit"}, usage="edit graph (click on nodes to remove)")
+  private boolean isEdit = false;
+  @Option(name="-g", aliases={"--guild"}, usage="generate graph for guild battle")
+  private boolean forGuild = false;
+  @Option(name="-o", aliases={"--optimize"}, usage="prints optimized combination of otome group")
+  private boolean isOptimize = false;
+  @Option(name="-u", aliases={"--update"}, usage="download and update friendlist from web")
+  private boolean updateFromWeb = false;
 
   //receives other command line parameters than options
   @Argument
@@ -438,16 +442,27 @@ public class Gomaotsu implements ViewerListener {
       al.add(s);
     }
   }
-
-  public void drawGraph() {
-    viewer = getGraph().display();
-    viewer.setCloseFramePolicy(Viewer.CloseFramePolicy.HIDE_ONLY);
+  
+  /**
+   * Generate otome graph structure.
+   * This method should be called if you need to visualize / analyze the network.
+   */
+  public void generateGraph() {
     for (Otome o : otomeSet) {
       for (Otome f : o.getFriendSet()) {
         addEdgeToGraph(o, f);
       }
     }
     removeRedundantNodes();
+  }
+
+  /**
+   * Generate graph and visualize it.
+   */
+  public void drawGraph() {
+    viewer = getGraph().display();
+    viewer.setCloseFramePolicy(Viewer.CloseFramePolicy.HIDE_ONLY);
+    generateGraph();
     // the graph becomes a sink for the viewer.
     // We also install us as a viewer listener to intercept the graphic events.
     ViewerPipe fromViewer = viewer.newViewerPipe();
@@ -467,15 +482,30 @@ public class Gomaotsu implements ViewerListener {
    * @author Akira Funahashi <funa@bio.keio.ac.jp>
    *
    */
-  class MyComp implements Comparator<Node> {
+  class StringLengthComparator implements Comparator<Node> {
     public int compare(Node o1, Node o2) {
       return Integer.compare(o1.getId().length(), o2.getId().length());
+    }
+  }
+  
+  class ValueComparator implements Comparator<ArrayList<Node>> {
+    Map<ArrayList<Node>, Double> base;
+    public ValueComparator(Map<ArrayList<Node>, Double> base) {
+      this.base = base;
+    }
+    @Override
+    public int compare(ArrayList<Node> o1, ArrayList<Node> o2) {
+      if (base.get(o1) >= base.get(o2)) {
+        return -1;
+      } else {
+        return 1;
+      } // returning 0 would merge keys
     }
   }
 
   /**
    * Traverse graph and remove redundant nodes
-   * Definition of redundant Node:
+   * Definition of a redundant Node:
    *  1.  It is a variant of some otome, and
    *  2.  It is not yet love max, and
    *  3a. It is 拡散 shot and we already have 拡散 variant on the network or,
@@ -492,7 +522,7 @@ public class Gomaotsu implements ViewerListener {
         Node tn = e.getTargetNode(); // tn is a parent of Node n.
         ln.add(tn);
       }
-      Collections.sort(ln, new MyComp());  // sort by the length of otome's name
+      Collections.sort(ln, new StringLengthComparator());  // sort by the length of otome's name
       for (int i = 0; i < ln.size(); i++) {
         Node tni = ln.get(i);
         Otome oi = getOtomeByName(tni.getId());
@@ -522,6 +552,135 @@ public class Gomaotsu implements ViewerListener {
     }
   }
 
+  /**
+   * prints optimized combination of otome group
+   */
+  public void optimizeCombination() {
+    Iterator<Node> nodes = graph.getNodeIterator();
+    ArrayList<Node> listOfShuuchuu = new ArrayList<Node>();
+    ArrayList<Node> listOfKakusan  = new ArrayList<Node>();
+    while (nodes.hasNext()) {
+      Node n = nodes.next();
+      Otome o = getOtomeByName(n.getId());
+      if (o.isShuuchuu()) {
+        listOfShuuchuu.add(n);
+      } else if (o.isKakusan()) {
+        listOfKakusan.add(n);
+      } else { // never reach here.
+        System.err.println("Otome should be shuuchuu or kakusan!");
+        System.exit(1);
+      }
+    }
+    // Search all combinations
+    HashMap<ArrayList<Node>, Double> gainMap = new HashMap<ArrayList<Node>, Double>();
+    ValueComparator vc =  new ValueComparator(gainMap);
+    TreeMap<ArrayList<Node>, Double> treeMap = new TreeMap<ArrayList<Node>, Double>(vc);
+    for (Node ns : listOfShuuchuu) {   // for each shuuchuu shot otome
+      for (Node nk : listOfKakusan) {  // for each kakusan  shot otome
+        ArrayList<Node> allSupportNodes = getSupportCandidates(ns, nk);
+        int n = allSupportNodes.size();
+        int k = 3;
+        // do nCk for rnodes (support otome)
+        Combination nCk = new Combination(n, k);
+        ArrayList<ArrayList<Integer>> comb = nCk.getListOfCombinations();
+        for (ArrayList<Integer> al : comb) {  // for all combinations of support otome
+          ArrayList<Node> supportNodes = new ArrayList<Node>();
+          for (int idx : al) {
+            supportNodes.add(allSupportNodes.get(idx));
+          }
+          double gain = calcGain(ns, nk, supportNodes);
+          // create key for this combination
+          ArrayList<Node> key = new ArrayList<Node>();
+          key.add(ns);
+          key.add(nk);
+          key.addAll(supportNodes);
+          gainMap.put(key, gain);
+        }
+      }
+    }
+    treeMap.putAll(gainMap);
+    Iterator<Entry<ArrayList<Node>, Double>> it = treeMap.entrySet().iterator();
+    if (it.hasNext()) {
+      Entry<ArrayList<Node>, Double> e = it.next();
+      double max = e.getValue();
+      while(it.hasNext()) {
+        e = it.next();
+        if (e.getValue() < max) break;
+        System.out.println(entryToString(e));
+      }
+    }
+  }
+  
+  public String entryToString(Entry<ArrayList<Node>, Double> e) {
+    String s = "[" + e.getKey().get(0) + "," + e.getKey().get(1) + "]" +
+    " (" + e.getKey().get(2) + "," + e.getKey().get(3) + "," + e.getKey().get(4) + ")";
+    return s;
+  }
+  
+  /**
+   * Calculate gain for given shuuchuu, kakusan and support otomes.
+   * @param ns
+   * @param nk
+   * @param supportNodes
+   * @return
+   */
+  public double calcGain(Node ns, Node nk, ArrayList<Node> supportNodes) {
+    double gain = 0D;
+    Otome os = getOtomeByName(ns.getId());
+    Otome ok = getOtomeByName(nk.getId());
+    gain += getGainHoshi(os);
+    gain += getGainHoshi(ok);
+    if (!os.isLoveMax()) gain += 300; // love max * 3
+    if (!ok.isLoveMax()) gain += 300; // love max * 3
+    for (Node n : supportNodes) {
+      Otome o = getOtomeByName(n.getId());
+      gain += getGainHoshi(o);
+      if (n.hasEdgeToward(ns) && o.getZokusei().equals(os.getZokusei())) { // if zokusei is same
+        gain += 1;
+      }
+      if (n.hasEdgeToward(nk) && o.getZokusei().equals(ok.getZokusei())) {
+        gain += 1;
+      }
+      if (n.hasEdgeToward(ns)) { // if support otome is a friend of shuuchuu
+        gain += 200; // lovelink + skill kakusei
+      } else if (n.hasEdgeToward(nk)) { // if support otome is a friend of kakusan
+        gain += 200; // lovelink + skill kakusei
+      }
+    }
+    return gain / 100;
+  }
+
+  /**
+   * Returns a gain of hoshi (3 is higher, 5 is lower)
+   * @param o
+   * @return
+   */
+  public int getGainHoshi(Otome o) {
+    if (o.isLoveMax()) return 0;
+    if (o.getHoshi() == 3) return 46;
+    else if (o.getHoshi() == 4) return 19;
+    else return 10;
+  }
+  
+  /**
+   * Returns listOfOtomes which does not contain main shot otomes, which means that
+   * the otomes which is in the returned list is a candidate of support shot. 
+   * @param ns node of shuuchuu shot otome
+   * @param nk node of kakusan  shot otome
+   * @return list of candidates of support otome
+   */
+  public ArrayList<Node> getSupportCandidates(Node ns, Node nk) {
+    ArrayList<Node> rnodes = new ArrayList<Node>();
+    Iterator<Node> nodes = graph.getNodeIterator();
+    while(nodes.hasNext()) {
+      Node n = nodes.next();
+      if (!n.equals(ns) && !n.equals(nk)) {
+        rnodes.add(n);
+      }
+    }
+    return rnodes;
+  }
+  
   public void writeGraphML() {
     FileSinkGraphML fs = new FileSinkGraphML();
     try {
@@ -576,8 +735,13 @@ public class Gomaotsu implements ViewerListener {
     init();
     addOtomeInfoFromFile();
     addFriendInfo(updateFromWeb);
-    drawGraph();
-    writeGraphML();
+    if (isOptimize) {
+      generateGraph();
+      optimizeCombination();
+    } else {
+      drawGraph();
+      writeGraphML();
+    }
     // exportEdgeCSV();
     if (updateFromWeb) {
       exportCSVFiles();
