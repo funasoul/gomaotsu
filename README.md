@@ -31,7 +31,7 @@ java -jar target/Gomaotsu-${version}-SNAPSHOT-jar-with-dependencies.jar [options
  -a (--add)          : always add 5 otome to graph (default: false)
  -e (--edit)         : edit graph (click on nodes to remove) (default: false)
  -g (--guild)        : generate graph for guild battle (default: false)
- -h (--help)         : display usage (default: true)
+ -h (--help)         : display usage (default: false)
  -o (--optimize)     : prints optimized combination of otome group (default: false)
  -u (--update)       : download and update friendlist from web (default: false)
 ```
