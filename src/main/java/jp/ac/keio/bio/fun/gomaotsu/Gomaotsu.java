@@ -619,6 +619,7 @@ public class Gomaotsu implements ViewerListener {
     if (it.hasNext()) {
       Entry<ArrayList<Node>, Double> e = it.next();
       double max = e.getValue();
+      rtn.put(e.getKey(), e.getValue());
       while(it.hasNext()) {
         e = it.next();
         if (e.getValue() < max) break;
@@ -674,8 +675,8 @@ public class Gomaotsu implements ViewerListener {
     gain += getGainHoshi(ok);
     gain += getGainShot(os);
     gain += getGainShot(ok);
-    if (!os.isLoveMax()) gain += 300; // love max * 3
-    if (!ok.isLoveMax()) gain += 300; // love max * 3
+    if (!os.isLoveMax()) gain += (1.75 + 1 + 3 + 0.5 + 1) * 100; // (easy:1+normal:1+hard:2+death:3)/4 = 1.75 + main*1 + loveMax*3 + sekkin*0.5 + seizon*1)
+    if (!ok.isLoveMax()) gain += (1.75 + 1 + 3 + 0.5 + 1) * 100; // (easy:1+normal:1+hard:2+death:3)/4 = 1.75 + main*1 + loveMax*3 + sekkin*0.5 + seizon*1)
     for (Node n : supportNodes) {
       Otome o = getOtomeByNode(n);
       gain += getGainHoshi(o);
@@ -685,23 +686,26 @@ public class Gomaotsu implements ViewerListener {
       if (n.hasEdgeToward(nk) && o.getZokusei().equals(ok.getZokusei())) {
         gain += 1;
       }
-      if (n.hasEdgeToward(ns)) { // if support otome is a friend of shuuchuu
-        gain += 200; // lovelink + skill kakusei
-      } else if (n.hasEdgeToward(nk)) { // if support otome is a friend of kakusan
-        gain += 200; // lovelink + skill kakusei
+      if (!o.isLoveMax()) {
+        gain += (1.75 + 1) * 100; // (easy:1+normal:1+hard:2+death:3)/4 = 1.75 + skill*1)
+        if (n.hasEdgeToward(ns)) { // if support otome is a friend of shuuchuu
+          gain += (1 + 0.478) * 100; // lovelink + skill kakusei(expected value: (40*0.15 + 100*0.3 + 200*0.45 + 300*0.6)/640 = 0.478 
+        } else if (n.hasEdgeToward(nk)) { // if support otome is a friend of kakusan
+          gain += (1 + 0.478) * 100; // lovelink + skill kakusei(expected value: (40*0.15 + 100*0.3 + 200*0.45 + 300*0.6)/640 = 0.478 
+        }
       }
     }
     return gain / 100;
   }
 
   /**
-   * Returns a gain of hoshi (3 is higher, 5 is lower)
+   * Returns a gain of hoshi (1,2,3 is higher, 5 is lower)
    * @param o
    * @return
    */
   public int getGainHoshi(Otome o) {
     if (o.isLoveMax()) return 0;
-    if (o.getHoshi() == 3) return 46;
+    if (o.getHoshi() <= 3) return 46;
     else if (o.getHoshi() == 4) return 19;
     else return 10;
   }

@@ -100,10 +100,11 @@ public class Combination {
 
   public static void main(String[] args) {
     int n, k;
-    n = 21;
+    n = 3;
     k = 3;
     Combination c = new Combination(n, k); // zero-origin
     //Combination c = new Combination(n, k, true); // one-origin
+    System.out.println(c.getCombinationNum(n, k));
     ArrayList<ArrayList<Integer>> comb = c.getListOfCombinations();
     for (ArrayList<Integer> al : comb) {
       System.out.println(al);
