@@ -85,6 +85,7 @@ public class Scraper {
         if (al.size() == 0) errSet.add(o);
       } else {
         al = this.getFriendListFromFile(o);
+        if (al.size() == 0) errSet.add(o);
       }
       // Add friend(and variants) to otome.
       // this is required only on getFriendListFromWeb, but just to make sure, it is also executed for FromFile.
