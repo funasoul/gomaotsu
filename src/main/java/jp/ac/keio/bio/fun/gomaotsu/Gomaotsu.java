@@ -221,7 +221,7 @@ public class Gomaotsu implements ViewerListener {
   }
 
   /**
-   * "file.csv" を "file-bak.csv" に mv
+   * "file.csv" を "file-bak.csv" に copy
    * 
    * @param src
    */
@@ -230,7 +230,7 @@ public class Gomaotsu implements ViewerListener {
       FileSystem fs = FileSystems.getDefault();
       Path dst = fs.getPath(src.toString().replace(".csv", "-bak.csv"));
       try {
-        Files.move(src, dst, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
       } catch (IOException e) {
         e.printStackTrace();
       }
