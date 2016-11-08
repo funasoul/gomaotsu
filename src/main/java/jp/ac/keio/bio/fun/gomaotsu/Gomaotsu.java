@@ -31,6 +31,9 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import jp.ac.keio.bio.fun.math.Combination;
+import jp.ac.keio.bio.fun.math.CombinationRecursive;
+
 /**
  * 
  */
@@ -593,12 +596,19 @@ public class Gomaotsu implements ViewerListener {
     for (Node ns : listOfShuuchuu) {   // for each shuuchuu shot otome
       for (Node nk : listOfKakusan) {  // for each kakusan  shot otome
         ArrayList<Node> allSupportNodes = getSupportCandidates(ns, nk);
+        // if allSupportNodes.size() is less than 3 (numSupportOtome), then add dummy node to list.
+        Iterator<Otome> ito = otomeSet.iterator();
+        for (int i = 0; i + allSupportNodes.size() < Constants.numSupportOtome; i++) {
+          Otome o = ito.next();
+          System.out.println("Add dummy Otome: (" + o.getColoredString() + o.getName() + ")");
+          allSupportNodes.add(graph.addNode(o.getName()));
+        }
         int n = allSupportNodes.size();
-        int k = 3;
+        int k = Constants.numSupportOtome;
         // do nCk for rnodes (support otome)
-        Combination nCk = new Combination(n, k);
-        ArrayList<ArrayList<Integer>> comb = nCk.getListOfCombinations();
-        for (ArrayList<Integer> al : comb) {  // for all combinations of support otome
+        Combination nCk = new CombinationRecursive(n, k);
+        List<List<Integer>> comb = nCk.getListOfCombinations();
+        for (List<Integer> al : comb) {  // for all combinations of support otome
           ArrayList<Node> supportNodes = new ArrayList<Node>();
           for (int idx : al) {
             supportNodes.add(allSupportNodes.get(idx));
@@ -738,6 +748,13 @@ public class Gomaotsu implements ViewerListener {
       }
     }
     return rnodes;
+  }
+  
+  public Otome generateDummyOtome(int i) {
+    Otome o =  new Otome();
+    o.setId(i + 10000);
+    o.setName("誰でも" + i);
+    return o;
   }
   
   public void writeGraphML() {

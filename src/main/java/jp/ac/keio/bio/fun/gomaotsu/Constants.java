@@ -10,6 +10,7 @@ import java.util.HashMap;
  *
  */
 public final class Constants {
+  public final static int numSupportOtome = 3; // num. of support otome
   public final static int nodeWeight = 5;
   public final static int edgeWeight = 5;
   public final static String baseURL = "http://seesaawiki.jp/mahouotome/d/%C0%AD%C7%BD%C8%E6%B3%D3";
