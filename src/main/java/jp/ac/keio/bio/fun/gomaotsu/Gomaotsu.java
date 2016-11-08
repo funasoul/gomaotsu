@@ -577,6 +577,7 @@ public class Gomaotsu implements ViewerListener {
     Iterator<Node> nodes = graph.getNodeIterator();
     ArrayList<Node> listOfShuuchuu = new ArrayList<Node>();
     ArrayList<Node> listOfKakusan  = new ArrayList<Node>();
+    Iterator<Otome> itDummy = otomeSet.iterator();
     while (nodes.hasNext()) {
       Node n = nodes.next();
       Otome o = getOtomeByNode(n);
@@ -593,13 +594,23 @@ public class Gomaotsu implements ViewerListener {
     HashMap<ArrayList<Node>, Double> gainMap = new HashMap<ArrayList<Node>, Double>();
     ValueComparator vc =  new ValueComparator(gainMap);
     TreeMap<ArrayList<Node>, Double> treeMap = new TreeMap<ArrayList<Node>, Double>(vc);
+    // if listOfShuuchuu and lisfOfKakusan does not contain any Node, then add a dummy node to list
+    if (listOfShuuchuu.size() == 0) {
+      Otome o = itDummy.next();
+      System.out.println("Add dummy Otome to listOfShuuchuu: (" + o.getColoredString() + o.getName() + ")");
+      listOfShuuchuu.add(graph.addNode(o.getName()));
+    }
+    if (listOfKakusan.size() == 0) {
+      Otome o = itDummy.next();
+      System.out.println("Add dummy Otome to listOfKakusan:  (" + o.getColoredString() + o.getName() + ")");
+      listOfKakusan.add(graph.addNode(o.getName()));
+    }
     for (Node ns : listOfShuuchuu) {   // for each shuuchuu shot otome
       for (Node nk : listOfKakusan) {  // for each kakusan  shot otome
         ArrayList<Node> allSupportNodes = getSupportCandidates(ns, nk);
         // if allSupportNodes.size() is less than 3 (numSupportOtome), then add dummy node to list.
-        Iterator<Otome> ito = otomeSet.iterator();
-        for (int i = 0; i + allSupportNodes.size() < Constants.numSupportOtome; i++) {
-          Otome o = ito.next();
+        for (int i = 0; i + allSupportNodes.size() <= Constants.numSupportOtome; i++) {
+          Otome o = itDummy.next();
           System.out.println("Add dummy Otome: (" + o.getColoredString() + o.getName() + ")");
           allSupportNodes.add(graph.addNode(o.getName()));
         }
