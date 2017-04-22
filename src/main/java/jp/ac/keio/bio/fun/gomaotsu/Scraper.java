@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.jsoup.Jsoup;
@@ -22,6 +24,7 @@ import org.jsoup.select.Elements;
  */
 public class Scraper {
   private String baseURL;
+  private TreeMap<String, ArrayList<String>> allFriendListFromWeb;
 
   /**
    * 
@@ -73,6 +76,10 @@ public class Scraper {
     TreeSet<Otome> errSet = new TreeSet<Otome>();
     int count = 0;
     int tick = (int)(otomeSet.size()*0.05);
+    if (fromWeb) {
+      System.out.println("Downloading Aishou list from web...");
+      createAllFriendListFromWeb();
+    }
     System.out.print("Loading Otome... ");
     for (Otome o : otomeSet) {
       count++;
@@ -81,7 +88,7 @@ public class Scraper {
       }
       ArrayList<String> al;
       if (fromWeb) {
-        al = this.getFriendListFromWeb(o);
+        al = this.getFriendListFromAllFriendList(o);
         if (al.size() == 0) errSet.add(o);
       } else {
         al = this.getFriendListFromFile(o);
@@ -111,6 +118,55 @@ public class Scraper {
     return listTable;
   }
 
+  public void createAllFriendListFromWeb() {
+    this.allFriendListFromWeb = new TreeMap<String, ArrayList<String>>();
+    try {
+      Document document = Jsoup.connect(Constants.aishouURL).timeout(0).get();
+      Element table = document.getElementsByTag("table").get(0); // first <table>
+      Elements rows = table.select("tr");
+      for (int i = 0; i < rows.size(); i++) {
+        Element row = rows.get(i);
+        Elements tmpRow = row.select("td");
+        if (tmpRow.size() > 0) {  // <td></td> を含む行の場合
+          Elements supportCols = row.select("td").get(0).select("p");
+          Elements shotCols = row.select("td").get(1).select("p");
+          String otomeName = supportCols.text();
+          ArrayList<String> al = new ArrayList<String>();
+          for (int j = 0; j < shotCols.size(); j++) {
+            String friendName = StringUtil.fixFriendName(shotCols.get(j).text());
+            al.add(friendName);
+          }
+          allFriendListFromWeb.put(otomeName,  al);
+        }
+      }
+    } catch (IOException e) {
+      System.err.println("Connection error on: " + Constants.aishouURL);
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * allFriendListFromWeb から、指定された乙女と相性が良い乙女のリストを見つけて返す。
+   * allFriendListFromWeb には variant は含まれていないため、引数で与えられた乙女が variant かを調べ、該当するリストを返す。
+   * @param otm
+   * @return
+   */
+  public ArrayList<String> getFriendListFromAllFriendList(Otome otm) {
+    for (Map.Entry<String, ArrayList<String>> e : allFriendListFromWeb.entrySet()) {
+      if (otm.isVariant(e.getKey())) {
+        return e.getValue();
+      }
+    }
+    return new ArrayList<String>();
+  }
+
+  /**
+   * 引数で与えられた乙女の web page を取得し、相性の良い乙女のリストを返す。
+   * 乙女毎にこのメソッドを呼ぶことになるため、実行時間がかかるため getFriendListFromAllFriendList() を使用するように変更。
+   * @deprecated
+   * @param otm
+   * @return
+   */
   public ArrayList<String> getFriendListFromWeb(Otome otm) {
     ArrayList<String> al = new ArrayList<String>();
     String otomeUrl = otm.getUrl();

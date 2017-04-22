@@ -14,8 +14,10 @@ public class StringUtil {
   public StringUtil() {
   }
 
-  /*
+  /**
    * 文字列のバイト長を返すメソッド http://nanaowls.blogspot.com.es/2012/01/java.html
+   * @param value
+   * @return
    */
   public static int getByteLength(String value) {
     int length = 0;
@@ -35,7 +37,7 @@ public class StringUtil {
     return length;
   }
 
-  /*
+  /**
    * 文字列の桁あわせを行うメソッド http://nanaowls.blogspot.com.es/2012/01/java.html
    * @param string 文字列
    * @param int 長さ
@@ -48,4 +50,16 @@ public class StringUtil {
     }
     return str;
   }
+  
+  /**
+   * 相性の良い使い魔の表から取得した文字列を整形する
+   * @param friendName
+   * @return
+   */
+  public static String fixFriendName(String friendName) {
+    friendName = friendName.replaceAll("　+（.+）$", "");
+    friendName = friendName.replaceAll(" +（.+）$", "");
+    return friendName;
+  }
+
 }

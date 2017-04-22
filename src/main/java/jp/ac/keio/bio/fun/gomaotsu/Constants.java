@@ -14,6 +14,7 @@ public final class Constants {
   public final static int nodeWeight = 5;
   public final static int edgeWeight = 5;
   public final static String baseURL = "http://seesaawiki.jp/mahouotome/d/%C0%AD%C7%BD%C8%E6%B3%D3";
+  public final static String aishouURL = "http://seesaawiki.jp/mahouotome/d/%C1%EA%C0%AD%A4%CE%CE%C9%A4%A4%BB%C8%A4%A4%CB%E2";
   public final static String otomeFileName = "OtomeList.csv";
   public final static String friendFileName = "FriendList.csv";
   public final static String stylesheet = "graph { padding: 45px; }"
