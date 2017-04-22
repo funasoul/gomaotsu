@@ -26,7 +26,7 @@ mvn clean package
 
 #### Launch from command line
 ```sh
-java -jar target/Gomaotsu-${version}-SNAPSHOT-jar-with-dependencies.jar [options...]
+java -jar target/Gomaotsu-${version}-jar-with-dependencies.jar [options...]
  -A (--addAllParent) : always add parent(dst) otome to graph (default: false)
  -a (--add)          : always add 5 otome to graph (default: false)
  -e (--edit)         : edit graph (click on nodes to remove) (default: false)
