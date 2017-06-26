@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# Last modified: Sat, 20 Aug 2016 01:57:14 +0900
+# Last modified: Mon, 26 Jun 2017 17:34:45 +0900
 #
 # Requirement: This script requires Unicode::GCString to be installed
 # on your system..
@@ -262,7 +262,7 @@ sub print_color {
 sub print_id {
   my $id = shift;
   my $color = get_color_byid($id);
-  my $str = sprintf("%-3s ", $id);
+  my $str = sprintf("%4s ", $id);
   print_color($str, $color);
   return length($str);
 }
